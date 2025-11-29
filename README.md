@@ -11,7 +11,12 @@
 也可以前往 https://greasyfork.org/zh-CN/scripts/543000 安装
 
 ****
-<td align="center">效果预览</td>
+<table>
+  <tr>
+    <td align="center">效果图</td>
+  </tr>
+</table>
+
 <table>
   <tr>
     <td align="center">未安装脚本的首页效果</td>
