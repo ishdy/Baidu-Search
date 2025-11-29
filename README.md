@@ -19,8 +19,12 @@
 <img src="https://youke1.picui.cn/s1/2025/11/28/69292b6676622.png" width="100%"><br>
 安装脚本之后的搜索结果单列居中效果<br>
 <img src="https://youke1.picui.cn/s1/2025/11/28/69292b8744284.png" width="100%"><br>
+安装脚本之后的搜索结果单列居中深色样式效果<br>
+<img src="https://youke1.picui.cn/s1/2025/11/29/692aad790d52e.png" width="100%"><br>
 安装脚本之后的搜索结果双列居中效果<br>
 <img src="https://youke1.picui.cn/s1/2025/11/28/69292b9c8dd78.png" width="100%"><br>
+安装脚本之后的搜索结果双列居中深色样式效果<br>
+<img src="https://youke1.picui.cn/s1/2025/11/29/692aad79769c2.png" width="100%"><br>
 
 **** 
 v1.47<br>
