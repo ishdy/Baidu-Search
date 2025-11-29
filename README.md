@@ -13,7 +13,7 @@
 ****
 
 <br>
-### 效果预览<br>
+效果预览<br>
 未安装脚本之前的首页效果<br>
 <img src="https://youke1.picui.cn/s1/2025/11/28/69292b406e64d.png" width="50%"><br>
 安装脚本之后的首页效果<br>
