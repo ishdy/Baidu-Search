@@ -22,7 +22,7 @@
 <img src="https://youke1.picui.cn/s1/2025/11/28/69292b8744284.png" width="50%"><br>
 安装脚本之后的搜索结果双列居中效果<br>
 <img src="https://youke1.picui.cn/s1/2025/11/28/69292b9c8dd78.png" width="50%"><br>
-****
+
 v1.47<br>
 百度首页又出现广告,增加屏蔽规则,优化一些代码<br>
 v1.46<br>
