@@ -11,21 +11,39 @@
 也可以前往 https://greasyfork.org/zh-CN/scripts/543000 安装
 
 ****
+<td align="center">效果预览</td>
+<table>
+  <tr>
+    <td align="center">未安装脚本的首页效果</td>
+    <td align="center">安装脚本的首页效果</td>
+  </tr>
+  <tr>
+    <td><img src="https://youke1.picui.cn/s1/2025/11/28/69292b406e64d.png" width="100%" /></td>
+    <td><img src="https://youke1.picui.cn/s1/2025/11/28/69292b6676622.png" width="100%" /></td>
+  </tr>
+</table>
 
-<br>
-效果预览<br>
-未安装脚本之前的首页效果<br>
-<img src="https://youke1.picui.cn/s1/2025/11/28/69292b406e64d.png" width="100%"><br>
-安装脚本之后的首页效果<br>
-<img src="https://youke1.picui.cn/s1/2025/11/28/69292b6676622.png" width="100%"><br>
-安装脚本之后的搜索结果单列居中效果<br>
-<img src="https://youke1.picui.cn/s1/2025/11/28/69292b8744284.png" width="100%"><br>
-安装脚本之后的搜索结果单列居中深色样式效果<br>
-<img src="https://youke1.picui.cn/s1/2025/11/29/692aad790d52e.png" width="100%"><br>
-安装脚本之后的搜索结果双列居中效果<br>
-<img src="https://youke1.picui.cn/s1/2025/11/28/69292b9c8dd78.png" width="100%"><br>
-安装脚本之后的搜索结果双列居中深色样式效果<br>
-<img src="https://youke1.picui.cn/s1/2025/11/29/692aad79769c2.png" width="100%"><br>
+<table>
+  <tr>
+    <td align="center">搜索结果单列居中效果</td>
+    <td align="center">索结果双列居中效果</td>
+  </tr>
+  <tr>
+    <td><img src="https://youke1.picui.cn/s1/2025/11/28/69292b8744284.png" width="100%" /></td>
+    <td><img src="https://youke1.picui.cn/s1/2025/11/28/69292b9c8dd78.png" width="100%" /></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center">单列居中深色样式效果</td>
+    <td align="center">双列居中深色样式效果</td>
+  </tr>
+  <tr>
+    <td><img src="https://youke1.picui.cn/s1/2025/11/29/692aad790d52e.png" width="100%" /></td>
+    <td><img src="https://youke1.picui.cn/s1/2025/11/29/692aad79769c2.png" width="100%" /></td>
+  </tr>
+</table>
 
 **** 
 v1.47<br>
