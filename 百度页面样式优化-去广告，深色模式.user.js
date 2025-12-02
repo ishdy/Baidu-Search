@@ -855,7 +855,7 @@
                     hint.className = 'gm-official-hint';
                     bestResult.appendChild(hint);
                 }
-                hint.textContent = '官方网站结果已置顶';
+                hint.textContent = '官方网站已置顶';
             }
         }, 500); // 增加延时以等待DOM渲染
     }
