@@ -51,7 +51,7 @@
 </table>
 
 **** 
-# Baidu-search 更新说明
+# Baidu-search 更新日志
 v1.48<br>
 修复搜索结果页面内点击链接后"官方网站已置顶"样式丢失的错误<br>
 v1.47<br>
