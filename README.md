@@ -23,8 +23,8 @@
     <td align="center">安装脚本的首页效果</td>
   </tr>
   <tr>
-    <td><img src="https://github.com/ishdy/Baidu-Search/blob/main/images/%E6%9C%AA%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC%E9%A6%96%E9%A1%B5.png" width="100%" /></td>
-    <td><img src="https://github.com/ishdy/Baidu-Search/blob/main/images/%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC%E9%A6%96%E9%A1%B5.png" width="100%" /></td>
+    <td><img src="images/%E6%9C%AA%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC%E9%A6%96%E9%A1%B5.png" width="100%" /></td>
+    <td><img src="images/%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC%E9%A6%96%E9%A1%B5.png" width="100%" /></td>
   </tr>
 </table>
 
@@ -34,8 +34,8 @@
     <td align="center">索结果双列居中效果</td>
   </tr>
   <tr>
-    <td><img src="https://github.com/ishdy/Baidu-Search/blob/main/images/%E6%90%9C%E7%B4%A2%E7%BB%93%E6%9E%9C%E5%8D%95%E5%88%97%E5%B1%85%E4%B8%AD%E6%95%88%E6%9E%9C.png" width="100%" /></td>
-    <td><img src="https://github.com/ishdy/Baidu-Search/blob/main/images/%E6%90%9C%E7%B4%A2%E7%BB%93%E6%9E%9C%E5%8F%8C%E5%88%97%E5%B1%85%E4%B8%AD%E6%95%88%E6%9E%9C.png" width="100%" /></td>
+    <td><img src="images/%E6%90%9C%E7%B4%A2%E7%BB%93%E6%9E%9C%E5%8D%95%E5%88%97%E5%B1%85%E4%B8%AD%E6%95%88%E6%9E%9C.png" width="100%" /></td>
+    <td><img src="images/%E6%90%9C%E7%B4%A2%E7%BB%93%E6%9E%9C%E5%8F%8C%E5%88%97%E5%B1%85%E4%B8%AD%E6%95%88%E6%9E%9C.png" width="100%" /></td>
   </tr>
 </table>
 
@@ -45,8 +45,8 @@
     <td align="center">双列居中深色样式效果</td>
   </tr>
   <tr>
-    <td><img src="https://github.com/ishdy/Baidu-Search/blob/main/images/%E5%8D%95%E5%88%97%E5%B1%85%E4%B8%AD%E6%B7%B1%E8%89%B2%E6%A0%B7%E5%BC%8F%E6%95%88%E6%9E%9C.png" width="100%" /></td>
-    <td><img src="https://github.com/ishdy/Baidu-Search/blob/main/images/%E5%8F%8C%E5%88%97%E5%B1%85%E4%B8%AD%E6%B7%B1%E8%89%B2%E6%A0%B7%E5%BC%8F%E6%95%88%E6%9E%9C.png" width="100%" /></td>
+    <td><img src="images/%E5%8D%95%E5%88%97%E5%B1%85%E4%B8%AD%E6%B7%B1%E8%89%B2%E6%A0%B7%E5%BC%8F%E6%95%88%E6%9E%9C.png" width="100%" /></td>
+    <td><img src="images/%E5%8F%8C%E5%88%97%E5%B1%85%E4%B8%AD%E6%B7%B1%E8%89%B2%E6%A0%B7%E5%BC%8F%E6%95%88%E6%9E%9C.png" width="100%" /></td>
   </tr>
 </table>
 
