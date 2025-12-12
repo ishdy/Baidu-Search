@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
-// @version      1.48
+// @version      1.49
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
-// @author       Gemini-Rcccccccc (Enhanced)
+// @author       Ai-Rcccccccc (Enhanced)
 // @match        *://www.baidu.com/*
 // @match        *://www1.baidu.com/*
 // @match        *://m.baidu.com/*
@@ -24,7 +24,8 @@
     // 稳定可靠的防闪烁/防白屏技术
     // ==============================================
     const observer = new MutationObserver(() => {
-        if (document.body) {
+        // 仅在非移动端且有body时控制透明度，防止移动端白屏
+        if (document.body && window.location.host !== 'm.baidu.com') {
             document.body.style.opacity = '0';
             observer.disconnect();
         }
@@ -290,6 +291,20 @@
     // ==============================================
     const runModifications = () => {
         try {
+            // ==============================================
+            // 移动端适配修复：
+            // 如果检测到是 m.baidu.com，仅执行重定向处理，直接返回，
+            // 不注入 PC 端的 CSS 和界面修改，防止手机端页面错乱。
+            // ==============================================
+            if (window.location.host === 'm.baidu.com') {
+                processRedirects();
+                if (document.body) { document.body.style.opacity = '1'; }
+                return;
+            }
+
+            // ==============================================
+            // PC 端逻辑继续执行
+            // ==============================================
             if (window.location.pathname === '/') {
                 const homepageStyles =
                       '#form, #s_form, .s_btn_wr, .s_ipt_wr, .fm, .ai-input, .s-center-box, #s_main, #s_new_search_guide, #bottom_layer, #bottom_space, #s_popup_advert, .popup-advert, .advert-shrink { display: none !important; }' +
@@ -855,7 +870,7 @@
                     hint.className = 'gm-official-hint';
                     bestResult.appendChild(hint);
                 }
-                hint.textContent = '官方网站已置顶';
+                hint.textContent = '官方网站结果已置顶';
             }
         }, 500); // 增加延时以等待DOM渲染
     }
