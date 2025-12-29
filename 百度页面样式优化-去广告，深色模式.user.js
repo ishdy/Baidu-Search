@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
-// @version      1.49
+// @version      1.50
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc (Enhanced)
@@ -31,6 +31,7 @@
         }
     });
     observer.observe(document.documentElement, { childList: true });
+
     // ==============================================
     // 重定向功能工具函数
     // ==============================================
@@ -284,7 +285,17 @@
 
           // (* REVISED *) 对齐底部的相关搜索和翻页栏
           'body.double-column #rs, body.double-column #page { max-width: 1400px !important; margin: 20px auto !important; padding: 0 20px !important; box-sizing: border-box !important; }' +
-          'body.double-column #rs > div, body.double-column #page > div { margin-left: 0 !important; margin-right: auto !important; }';
+          'body.double-column #rs > div, body.double-column #page > div { margin-left: 0 !important; margin-right: auto !important; }' +
+
+          // ==========================================================================
+          // 强制双列模式下的所有栅格和表格宽度撑满
+          // ==========================================================================
+          'body.double-column [class*="c-span"] { width: 100% !important; max-width: 100% !important; float: none !important; margin-left: 0 !important; }' +
+          'body.double-column .c-row { display: block !important; width: 100% !important; max-width: 100% !important; }' +
+          'body.double-column table { width: 100% !important; max-width: 100% !important; display: table !important; }' +
+          'body.double-column .op_tieba_general_main, body.double-column .op_tieba_general_col, body.double-column .op_exactqa_main, body.double-column .op_exactqa_body { width: 100% !important; max-width: 100% !important; }' +
+          'body.double-column .c-container > div, body.double-column .result-op > div { width: 100% !important; }' +
+          'body.double-column .op-soft-title, body.double-column .op_soft_title { max-width: 100% !important; }';
 
     // ==============================================
     // 核心执行函数
@@ -319,15 +330,33 @@
             }
             else if (window.location.pathname === '/s') {
                 const resultsPageStyles =
-                      '#content_left > div[style*="display:block !important"], #content_left > div[data-ec-ad-type], div[tpl="new_baikan_index"], [tpl="wenda_generate"], .ai-entry.cos-space-mb-xs, .result-op.c-container.new-pmd[tpl="ai_index"], .result-op[tpl="wenda_generate"], div[m-name^="mirror-san/app/wenda_generate"], div[tpl="ai_ask"], #s_popup_advert { display: none !important; }' +
+                      // 广告屏蔽 (无条件屏蔽)
+                      '#content_left > div[style*="display:block !important"], #content_left > div[data-ec-ad-type], #s_popup_advert { display: none !important; }' +
+                      // 强力屏蔽：底部弹出及右下角悬浮缩放广告
+                      '#s_popup_advert, .popup-advert, .advert-shrink, .advert-shrink2, #s_popup_advert * { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; position: fixed !important; top: -9999px !important; left: -9999px !important; z-index: -999999 !important; clip: rect(0 0 0 0) !important; }' +
+
+                      // AI 回答屏蔽 (基于 body.hide-ai 类名控制)
+                      'body.hide-ai div[tpl="new_baikan_index"], body.hide-ai [tpl="wenda_generate"], body.hide-ai .ai-entry.cos-space-mb-xs, body.hide-ai .result-op.c-container.new-pmd[tpl="ai_index"], body.hide-ai .result-op[tpl="wenda_generate"], body.hide-ai div[m-name^="mirror-san/app/wenda_generate"], body.hide-ai div[tpl="ai_ask"] { display: none !important; }' +
+
                       '#s_form, #u { display: none !important; }' +
-                      'div[tpl="new_baikan_index"], ' +
                       '#head { height: 60px !important; display: flex; align-items: center; justify-content: center; background: #fff !important; border-bottom: 1px solid #e4e7ed !important; transition: background-color 0.3s, border-color 0.3s; }' +
                       '#container { padding-top: 10px !important; }' +
-                      '#s_tab { width: fit-content !important; margin-left: auto !important; margin-right: auto !important; padding-left: 0 !important; }' +
-                      '#s_tab .s-tab-item { margin-left: 12px !important; margin-right: 12px !important; }' +
+
+                      // -----------------------------------------------------
+                      // [修复] 浅色模式下导航栏和筛选栏的 Flex 居中布局
+                      // -----------------------------------------------------
+                      '#s_tab { width: 100% !important; padding-left: 0 !important; display: flex !important; justify-content: center !important; background: transparent !important; }' +
+                      '#s_tab_inner { display: flex !important; align-items: center !important; justify-content: center !important; width: auto !important; float: none !important; }' +
+                      '#s_tab .s-tab-item { display: inline-flex !important; align-items: center !important; float: none !important; margin: 0 10px !important; vertical-align: middle !important; }' +
+                      // **[关键修复]** 限制浅色模式下导航栏图片的尺寸 (修复AI图标过大问题)
+                      '#s_tab .s-tab-item img { height: 18px !important; width: auto !important; margin-right: 5px !important; vertical-align: text-bottom !important; object-fit: contain !important; }' +
+
+                      // 修复下方筛选标签栏
+                      '.tag-container_ksKXH, .wrapper_l .tag-wrapper_1sGop { width: 100% !important; margin: 10px auto !important; position: relative !important; display: flex !important; justify-content: center !important; top: unset !important; bottom: unset !important; float: none !important; }' +
+                      '.tag-scroll_3EMBO { display: flex !important; justify-content: center !important; width: auto !important; }' +
+                      // -----------------------------------------------------
+
                       '.gm-search-container { display: flex; margin: 0 auto; justify-content: center; }' +
-                      '.tag-container_ksKXH, .wrapper_l .tag-wrapper_1sGop { width: fit-content; margin: 0px auto !important; position: relative !important; top: unset !important; bottom: unset !important; }' +
 
                       // 控制按钮通用样式
                       '.gm-control-button { position: fixed; bottom: 20px; width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 10000; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35); transition: all 0.3s cubic-bezier(.25,.8,.25,1) !important; overflow: hidden; }' +
@@ -384,6 +413,11 @@
                       '.icon-layout svg { fill: #5f6368; stroke: #5f6368; transition: all 0.25s ease; }' +
                       '.settings-item:hover .icon-layout svg { fill: #667eea; stroke: #667eea; }' +
 
+                      // AI 屏蔽图标
+                      '.icon-ai { width: 16px; height: 16px; }' +
+                      '.icon-ai svg { fill: #5f6368; transition: fill 0.25s ease; }' +
+                      '.settings-item:hover .icon-ai svg { fill: #667eea; }' +
+
                       // 深色模式下的样式
                       'body.dark-mode .gm-control-button { background-color: #3c4043; }' +
                       'body.dark-mode .gm-control-button:hover { background-color: #4d5154; }' +
@@ -393,8 +427,15 @@
                       'body.dark-mode .settings-item:hover { background: #3c4043; }' +
                       'body.dark-mode .settings-item-label { color: #e8eaed; }' +
                       'body.dark-mode .settings-divider { background: #3c4043; }' +
-                      'body.dark-mode .icon-dark-mode svg, body.dark-mode .icon-layout svg { fill: #e8eaed; stroke: #e8eaed; }' +
+                      'body.dark-mode .icon-dark-mode svg, body.dark-mode .icon-layout svg, body.dark-mode .icon-ai svg { fill: #e8eaed; stroke: #e8eaed; }' +
                       'body.dark-mode .toggle-switch { background: #5f6368; }' +
+                      'body.dark-mode.double-column #rs, body.dark-mode.double-column #page { background: transparent !important; }' +
+                      'body.dark-mode.double-column .rs-title { color: #e8e6e3 !important; }' +
+                      'body.dark-mode.double-column .rs-list .rs-item a { color: #8ab4f8 !important; background: #3c4043 !important; border: 1px solid #555 !important; border-radius: 4px !important; padding: 4px 12px !important; text-decoration: none !important; }' +
+                      'body.dark-mode.double-column .rs-list .rs-item a:hover { background: #4e6ef2 !important; color: #fff !important; }' +
+                      'body.dark-mode.double-column #page a { background: #3c4043 !important; border: 1px solid #555 !important; color: #e8e6e3 !important; }' +
+                      'body.dark-mode.double-column #page a:hover { background: #4e6ef2 !important; color: #fff !important; }' +
+                      'body.dark-mode #back-to-top .btt-icon svg { fill: #e8eaed; }' +
 
                       // 深色模式核心样式
                       'body.dark-mode { background-color: #1a1a1a !important; color: #e8e6e3 !important; }' +
@@ -596,7 +637,8 @@
             if (document.body) { document.body.style.opacity = '1'; }
         }
     };
-      // ==============================================
+
+    // ==============================================
     // 翻页&动态内容监听器
     // ==============================================
     function initMainObserver() {
@@ -651,7 +693,7 @@
                     }
 
                     // 在所有操作完成后，重新开始观察
-                      if(document.body) mainObserver.observe(document.body, observerConfig);
+                    if(document.body) mainObserver.observe(document.body, observerConfig);
                 }, 0);
             }
         });
@@ -688,64 +730,76 @@
     function setupSettingsMenu() {
         if(document.getElementById('settings-toggle')) return;
 
-    // 创建返回顶部按钮
-    const backToTopButton = document.createElement('div');
-    backToTopButton.id = 'back-to-top';
-    backToTopButton.className = 'gm-control-button';
-    backToTopButton.title = '返回顶部';
-    backToTopButton.innerHTML =
-        '<span class="back-to-top-icon">' +
-        '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
-        '<path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>' +
-        '<path d="M7.41 20.41L12 15.83l4.59 4.58L18 19l-6-6-6 6z"/>' +
-        '</svg>' +
-        '</span>';
+        // 创建返回顶部按钮
+        const backToTopButton = document.createElement('div');
+        backToTopButton.id = 'back-to-top';
+        backToTopButton.className = 'gm-control-button';
+        backToTopButton.title = '返回顶部';
+        backToTopButton.innerHTML =
+            '<span class="back-to-top-icon">' +
+            '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>' +
+            '<path d="M7.41 20.41L12 15.83l4.59 4.58L18 19l-6-6-6 6z"/>' +
+            '</svg>' +
+            '</span>';
 
-    // 创建设置按钮
-    const settingsButton = document.createElement('div');
-    settingsButton.id = 'settings-toggle';
-    settingsButton.className = 'gm-control-button';
-    settingsButton.title = '设置';
-    settingsButton.innerHTML =
-        '<span class="settings-icon">' +
-        '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
-        '<path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>' +
-        '</svg>' +
-        '</span>';
+        // 创建设置按钮
+        const settingsButton = document.createElement('div');
+        settingsButton.id = 'settings-toggle';
+        settingsButton.className = 'gm-control-button';
+        settingsButton.title = '设置';
+        settingsButton.innerHTML =
+            '<span class="settings-icon">' +
+            '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>' +
+            '</svg>' +
+            '</span>';
 
-    // 创建设置面板
-    const settingsPanel = document.createElement('div');
-    settingsPanel.id = 'settings-panel';
-    settingsPanel.innerHTML =
-        '<div class="settings-item" id="dark-mode-item">' +
-            '<div class="settings-item-label">' +
-                '<div class="settings-item-icon icon-dark-mode">' +
-                    '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
-                        '<path d="M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3z"/>' +
-                    '</svg>' +
+        // 创建设置面板
+        const settingsPanel = document.createElement('div');
+        settingsPanel.id = 'settings-panel';
+        settingsPanel.innerHTML =
+            '<div class="settings-item" id="dark-mode-item">' +
+                '<div class="settings-item-label">' +
+                    '<div class="settings-item-icon icon-dark-mode">' +
+                        '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+                            '<path d="M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3z"/>' +
+                        '</svg>' +
+                    '</div>' +
+                    '<span>深色模式</span>' +
                 '</div>' +
-                '<span>深色模式</span>' +
+                '<div class="toggle-switch" id="dark-mode-switch"></div>' +
             '</div>' +
-            '<div class="toggle-switch" id="dark-mode-switch"></div>' +
-        '</div>' +
-        '<div class="settings-divider"></div>' +
-        '<div class="settings-item" id="layout-item">' +
-            '<div class="settings-item-label">' +
-                '<div class="settings-item-icon icon-layout">' +
-                    '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-                        '<rect x="3" y="4" width="8" height="16" rx="1" stroke-width="2"/>' +
-                        '<rect x="13" y="4" width="8" height="16" rx="1" stroke-width="2"/>' +
-                    '</svg>' +
+            '<div class="settings-divider"></div>' +
+            '<div class="settings-item" id="layout-item">' +
+                '<div class="settings-item-label">' +
+                    '<div class="settings-item-icon icon-layout">' +
+                        '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+                            '<rect x="3" y="4" width="8" height="16" rx="1" stroke-width="2"/>' +
+                            '<rect x="13" y="4" width="8" height="16" rx="1" stroke-width="2"/>' +
+                        '</svg>' +
+                    '</div>' +
+                    '<span>双列布局</span>' +
                 '</div>' +
-                '<span>双列布局</span>' +
+                '<div class="toggle-switch" id="layout-switch"></div>' +
             '</div>' +
-            '<div class="toggle-switch" id="layout-switch"></div>' +
-        '</div>';
+            '<div class="settings-divider"></div>' +
+            '<div class="settings-item" id="ai-hide-item">' +
+                '<div class="settings-item-label">' +
+                    '<div class="settings-item-icon icon-ai">' +
+                        '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+                            '<path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5A2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5a2.5 2.5 0 0 0 2.5 2.5a2.5 2.5 0 0 0 2.5-2.5a2.5 2.5 0 0 0-2.5-2.5"/>' +
+                        '</svg>' +
+                    '</div>' +
+                    '<span>屏蔽AI回答</span>' +
+                '</div>' +
+                '<div class="toggle-switch" id="ai-hide-switch"></div>' +
+            '</div>';
 
 
-    document.body.appendChild(settingsButton);
-    document.body.appendChild(backToTopButton);
-    document.body.appendChild(settingsPanel);
+        document.body.appendChild(settingsButton);
+        document.body.appendChild(backToTopButton);
+        document.body.appendChild(settingsPanel);
 
         // 返回顶部按钮功能
         const toggleBackToTop = () => {
@@ -818,10 +872,27 @@
         // 初始化布局
         const savedLayout = GM_getValue('doubleColumn', false);
         updateLayout(savedLayout);
+
+        // AI 屏蔽切换
+        const aiHideItem = document.getElementById('ai-hide-item');
+        const aiHideSwitch = document.getElementById('ai-hide-switch');
+        const updateAiHide = (isHide) => {
+            document.body.classList.toggle('hide-ai', isHide);
+            aiHideSwitch.classList.toggle('active', isHide);
+        };
+
+        aiHideItem.addEventListener('click', () => {
+            const isHide = !document.body.classList.contains('hide-ai');
+            GM_setValue('hideAi', isHide);
+            updateAiHide(isHide);
+        });
+
+        // 初始化 AI 屏蔽 (默认开启，即默认屏蔽，或者根据你的喜好改为 false)
+        const savedAiHide = GM_getValue('hideAi', true);
+        updateAiHide(savedAiHide);
     }
 
     function rankOfficialSite() {
-
         // 使用延时确保动态加载的内容已经被渲染
         setTimeout(() => {
             const resultsContainer = document.getElementById('content_left');
@@ -874,4 +945,19 @@
             }
         }, 500); // 增加延时以等待DOM渲染
     }
+
+    // 初始化暴力样式修正器
+    function initForceStyleFixer() {
+        setInterval(() => {
+            try {
+                // 暴力移除广告
+                const ads = document.querySelectorAll('#s_popup_advert, .popup-advert, .advert-shrink, .advert-shrink2');
+                ads.forEach(node => node.remove());
+            } catch (e) {}
+        }, 500);
+    }
+
+    // 启动样式修正
+    initForceStyleFixer();
+
 })();
