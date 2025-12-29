@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
-// @version      1.51
+// @version      1.52
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc (Enhanced)
@@ -215,7 +215,7 @@
           '.gm-search-button { height: 42px; padding: 0 25px; border: none !important; box-sizing: border-box !important; outline: none !important; cursor: pointer; font-size: 17px; background: #4e6ef2; border-radius: 0 24px 24px 0; color: #fff; display: flex; align-items: center; justify-content: center; white-space: nowrap; }' +
           '.gm-search-button:hover { background: #3079e8; }' +
           // =========================================================================
-          // 优化置顶提示样式
+          // 优化置顶提示样式：使用极高优先级选择器，防止被通用样式拉伸
           // =========================================================================
           'body #content_left .c-container .gm-official-hint { ' +
           'position: absolute !important; left: 0 !important; bottom: 0 !important; top: auto !important; right: auto !important; ' +
@@ -324,10 +324,10 @@
           'body.double-column .c-container > div, body.double-column .result-op > div { width: 100% !important; }' +
           'body.double-column .op-soft-title, body.double-column .op_soft_title { max-width: 100% !important; }' +
 
-          // 6. (新增 v1.71) 修复 Gitee/开源项目卡片内容过窄的问题
+          // 6. 强力修复 Gitee/开源项目卡片内容过窄的问题
           'body.double-column [class*="open-source-software-blog-card"] section, ' +
           'body.double-column [class*="open-source-software-blog-card"] .blog-list-container, ' +
-          'body.double-column [class*="open-source-software-blog-card"] .c-row { width: 100% !important; max-width: 100% !important; }' +
+          'body.double-column [class*="open-source-software-blog-card"] .c-row { width: 100% !important; max-width: 100% !important; display: flex !important; }' +
           'body.double-column [class*="blog-summary"] { max-width: 100% !important; white-space: normal !important; }' +
 
           // ==========================================================================
@@ -360,9 +360,9 @@
           // 5. 确保链接容器横向排列
           'body.double-column a[class*="siteLink"] { display: flex !important; align-items: center !important; text-decoration: none !important; }' +
 
-          // 6. 修复左侧缩略图过高的问题，强制覆盖 .c-img-s 的 padding-bottom: 100%
-          '.pc-fresh-wrapper-con .new-pmd .c-img-s { padding-bottom: 0 !important; height: auto !important; max-height: 120px !important; }' +
-          '.pc-fresh-wrapper-con .new-pmd .c-img-s img { position: static !important; max-height: 120px !important; width: auto !important; object-fit: cover !important; }' +
+          // 6. 修复左侧缩略图过高/过宽的问题，强制为 120px 正方形
+          '.pc-fresh-wrapper-con .new-pmd .c-img-s { padding-bottom: 0 !important; height: 120px !important; width: 120px !important; }' +
+          '.pc-fresh-wrapper-con .new-pmd .c-img-s img { position: static !important; max-height: 120px !important; width: 120px !important; object-fit: cover !important; }' +
 
           // 7. 给第一条结果（置顶的官方结果）增加底部 padding，腾出空间放蓝色标签，防止遮挡文字
           '#content_left > .c-container:first-child, #content_left > .result:first-child, #content_left > .result-op:first-child { position: relative !important; padding-bottom: 35px !important; }';
@@ -401,7 +401,8 @@
             }
             else if (window.location.pathname === '/s') {
                 const resultsPageStyles =
-                      // 广告屏蔽 (无条件屏蔽)
+                      // 强力去除 EC_result, data-placeid, 底部推荐词 等商业推广广告
+                      '.EC_result, .ec_result, [data-tuiguang], [data-ecimtimesign], [data-placeid], [data-cmatchid], .ec-tuiguang, .c-recomm-wrap, ' +
                       '#content_left > div[style*="display:block !important"], #content_left > div[data-ec-ad-type], #s_popup_advert { display: none !important; }' +
                       // 强力屏蔽：底部弹出及右下角悬浮缩放广告
                       '#s_popup_advert, .popup-advert, .advert-shrink, .advert-shrink2, #s_popup_advert * { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; position: fixed !important; top: -9999px !important; left: -9999px !important; z-index: -999999 !important; clip: rect(0 0 0 0) !important; }' +
