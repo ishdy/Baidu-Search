@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
-// @version      1.52
+// @version      1.53
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc (Enhanced)
@@ -331,41 +331,116 @@
           'body.double-column [class*="blog-summary"] { max-width: 100% !important; white-space: normal !important; }' +
 
           // ==========================================================================
-          // 修复百科图片变成巨大正方形的问题
+          // 修复百科卡片布局：图片左、文字右、底部按钮不重叠 - 完全修复版
           // ==========================================================================
-          // 覆盖百度原生的 padding-bottom: 100% 规则，取消正方形强制比例，改为10%
-          'body.double-column .pc-fresh-wrapper-con .new-pmd .c-img-s { padding-bottom: 10% !important; }' +
-          // 限制图片最大高度，防止撑破容器
-          'body.double-column .pc-fresh-wrapper-con .new-pmd .c-img img { width: 100% !important; }' +
 
-          // 额外保障：防止百科图片被意外拉伸
-          'body.double-column .c-span3 { width: 25% !important; float: left !important; }' +
-          'body.double-column .c-span9 { width: 75% !important; float: right !important; }' +
+          // 8. 父容器使用flex横向布局
+          '.pc-fresh-wrapper-con .new-pmd .c-row.card-normal_3X7DX, .bk_polysemy_1Ef6j .c-row.card-normal_3X7DX { display: flex !important; flex-direction: row !important; align-items: flex-start !important; gap: 15px !important; flex-wrap: nowrap !important; }' +
 
-          // ==========================================================================
-          // 强力修复: 针对多层嵌套的来源图标，强制所有子级为16px
-          // ==========================================================================
-          // 1. 锁定最外层容器及其所有后代元素的大小
-          'body.double-column div[class*="site-img"], body.double-column div[class*="site-img"] * { width: 16px !important; height: 16px !important; max-width: 16px !important; min-width: 16px !important; flex: 0 0 16px !important; box-sizing: border-box !important; }' +
+          // 9. 左侧图片容器固定宽度
+          '.pc-fresh-wrapper-con .new-pmd .c-span3.left-image_3TJlK, .bk_polysemy_1Ef6j .c-span3.left-image_3TJlK { flex: 0 0 120px !important; width: 120px !important; max-width: 120px !important; }' +
 
-          // 2. 单独处理容器的边距和溢出，防止切断
-          'body.double-column div[class*="site-img"] { margin-right: 6px !important; overflow: hidden !important; display: flex !important; align-items: center !important; }' +
+          // 10. 右侧内容自动填充
+          '.pc-fresh-wrapper-con .new-pmd .c-span9.main-info_4Q_kj, .bk_polysemy_1Ef6j .c-span9.main-info_4Q_kj { flex: 1 !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; }' +
 
-          // 3. 强制图片适应容器
-          'body.double-column div[class*="site-img"] img { object-fit: contain !important; display: block !important; border: none !important; }' +
+          // 11. 底部来源区域 - 横向排列按钮
+          '.pc-fresh-wrapper-con .source_1Vdff, .bk_polysemy_1Ef6j .source_1Vdff { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 10px !important; margin-top: 10px !important; }' +
 
-          // 4. 针对 c-img-s 类的补充修复 (以防没有 site-img 包裹的情况)
-          'body.double-column .c-img-s, body.double-column .c-img-s * { width: 16px !important; height: 16px !important; max-width: 16px !important; }' +
+          // 12. 底部链接样式
+          '.pc-fresh-wrapper-con .siteLink_9TPP3, .bk_polysemy_1Ef6j .siteLink_9TPP3 { display: flex !important; align-items: center !important; gap: 5px !important; }' +
 
-          // 5. 确保链接容器横向排列
-          'body.double-column a[class*="siteLink"] { display: flex !important; align-items: center !important; text-decoration: none !important; }' +
+          // 13. 举报按钮不重叠
+          '.pc-fresh-wrapper-con .c-tools, .bk_polysemy_1Ef6j .c-tools { display: flex !important; align-items: center !important; margin-left: auto !important; }' +
 
-          // 6. 修复左侧缩略图过高/过宽的问题，强制为 120px 正方形
-          '.pc-fresh-wrapper-con .new-pmd .c-img-s { padding-bottom: 0 !important; height: 120px !important; width: 120px !important; }' +
-          '.pc-fresh-wrapper-con .new-pmd .c-img-s img { position: static !important; max-height: 120px !important; width: 120px !important; object-fit: cover !important; }' +
+          // 14. 播报按钮横向排列
+          '.pc-fresh-wrapper-con .tts-wrapper_1Lt-9, .bk_polysemy_1Ef6j .tts-wrapper_1Lt-9 { display: inline-flex !important; margin-left: 10px !important; }' +
 
-          // 7. 给第一条结果（置顶的官方结果）增加底部 padding，腾出空间放蓝色标签，防止遮挡文字
-          '#content_left > .c-container:first-child, #content_left > .result:first-child, #content_left > .result-op:first-child { position: relative !important; padding-bottom: 35px !important; }';
+          // 15. 双列模式下视频包装器样式优化
+          'body.double-column .bk_polysemy_1Ef6j .video-wrapper_MQNVE { width: 10% !important; height: 16px !important; margin-bottom: 8px !important; position: relative !important; border: 1px solid rgba(0, 0, 0, 0.05) !important; border-radius: 12px !important; overflow: hidden !important; -webkit-mask-image: -webkit-radial-gradient(white, black) !important; }' +
+
+
+            // ==========================================================================
+            // 修复百科图片变成巨大正方形的问题
+            // ==========================================================================
+            // 覆盖百度原生的 padding-bottom: 100% 规则，取消正方形强制比例，改为10%
+            'body.double-column .pc-fresh-wrapper-con .new-pmd .c-img-s { padding-bottom: 10% !important; }' +
+            // 限制图片最大高度，防止撑破容器
+            'body.double-column .pc-fresh-wrapper-con .new-pmd .c-img img { width: 100% !important; }' +
+
+            // 额外保障：防止百科图片被意外拉伸
+            'body.double-column .c-span3 { width: 25% !important; float: left !important; }' +
+            'body.double-column .c-span9 { width: 75% !important; float: right !important; }' +
+            // ==========================================================================
+            // 强力修复: 针对多层嵌套的来源图标，强制所有子级为16px
+            // ==========================================================================
+            // 1. 锁定最外层容器及其所有后代元素的大小
+            'body.double-column div[class*="site-img"], body.double-column div[class*="site-img"] * { width: 16px !important; height: 16px !important; max-width: 16px !important; min-width: 16px !important; flex: 0 0 16px !important; box-sizing: border-box !important; }' +
+
+            // 2. 单独处理容器的边距和溢出，防止切断
+            'body.double-column div[class*="site-img"] { margin-right: 6px !important; overflow: hidden !important; display: flex !important; align-items: center !important; }' +
+
+            // 3. 强制图片适应容器
+            'body.double-column div[class*="site-img"] img { object-fit: contain !important; display: block !important; border: none !important; }' +
+
+            // 4. 针对 c-img-s 类的补充修复 (以防没有 site-img 包裹的情况)
+            'body.double-column .c-img-s, body.double-column .c-img-s * { width: 16px !important; height: 16px !important; max-width: 16px !important; }' +
+
+            // 5. 确保链接容器横向排列
+            'body.double-column a[class*="siteLink"] { display: flex !important; align-items: center !important; text-decoration: none !important; }' +
+
+            // ==========================================================================
+            // 百科卡片图片显示修复（精确选择器，避免影响底部来源图标）
+            // ==========================================================================
+
+            // 1. 覆盖百度原生的 padding-bottom 规则（只针对顶部图片区域）
+            'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s { padding-bottom: 0 !important; }' +
+            'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s { padding-bottom: 0 !important; }' +
+
+            // 2. 百科左侧缩略图（c-img-s in c-span3）- 强制 120px x 100px
+            'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s { width: 120px !important; height: 100px !important; min-width: 120px !important; max-width: 120px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: left !important; margin-right: 15px !important; }' +
+            'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s { width: 120px !important; height: 100px !important; min-width: 120px !important; max-width: 120px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: left !important; margin-right: 15px !important; }' +
+            '.pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s { width: 120px !important; height: 100px !important; min-width: 120px !important; max-width: 120px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: left !important; margin-right: 15px !important; }' +
+
+            'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s img { width: 100% !important; height: 100% !important; max-width: 120px !important; max-height: 100px !important; object-fit: cover !important; display: block !important; position: static !important; }' +
+            'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s img { width: 100% !important; height: 100% !important; max-width: 120px !important; max-height: 100px !important; object-fit: cover !important; display: block !important; position: static !important; }' +
+            '.pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s img { width: 100% !important; height: 100% !important; max-width: 120px !important; max-height: 100px !important; object-fit: cover !important; display: block !important; position: static !important; }' +
+
+            // 3. 百科右侧大图（c-img3 in c-span9）- 强制 140px x 100px
+            'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span9 .c-img3 { width: 140px !important; height: 100px !important; min-width: 140px !important; max-width: 140px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: right !important; margin-left: 15px !important; }' +
+            'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span9 .c-img3 { width: 140px !important; height: 100px !important; min-width: 140px !important; max-width: 140px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: right !important; margin-left: 15px !important; }' +
+            '.pc-fresh-wrapper-con .new-pmd .c-row > .c-span9 .c-img3 { width: 140px !important; height: 100px !important; min-width: 140px !important; max-width: 140px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: right !important; margin-left: 15px !important; }' +
+
+            'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span9 .c-img3 img { width: 100% !important; height: 100% !important; max-width: 140px !important; max-height: 100px !important; object-fit: cover !important; display: block !important; position: static !important; }' +
+            'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span9 .c-img3 img { width: 100% !important; height: 100% !important; max-width: 140px !important; max-height: 100px !important; object-fit: cover !important; display: block !important; position: static !important; }' +
+            '.pc-fresh-wrapper-con .new-pmd .c-row > .c-span9 .c-img3 img { width: 100% !important; height: 100% !important; max-width: 140px !important; max-height: 100px !important; object-fit: cover !important; display: block !important; position: static !important; }' +
+
+            // 4. 修复百科卡片布局，防止文字重叠
+            'body.double-column .pc-fresh-wrapper-con .new-pmd .c-span3 { width: auto !important; min-height: 110px !important; overflow: visible !important; margin-bottom: 15px !important; }' +
+            'body.double-column .pc-fresh-wrapper-con .new-pmd .c-span9 { width: auto !important; min-height: 110px !important; overflow: visible !important; clear: none !important; }' +
+            'body.single-column .pc-fresh-wrapper-con .new-pmd .c-span3 { width: auto !important; min-height: 110px !important; overflow: visible !important; margin-bottom: 15px !important; }' +
+            'body.single-column .pc-fresh-wrapper-con .new-pmd .c-span9 { width: auto !important; min-height: 110px !important; overflow: visible !important; clear: none !important; }' +
+
+            // 5. 确保文字内容有足够空间不重叠（给顶部区域留空间）
+            'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 > .c-span-last { display: block !important; margin-left: 135px !important; min-height: 100px !important; }' +
+            'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span9.main-info_4Q_kj { display: block !important; min-height: 100px !important; }' +
+            'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 > .c-span-last { display: block !important; margin-left: 135px !important; min-height: 100px !important; }' +
+            'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span9.main-info_4Q_kj { display: block !important; min-height: 100px !important; }' +
+
+
+            // 6. 确保底部来源图标保持16x16（明确排除site-img区域的c-img-s）
+            'body.double-column .pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s, body.double-column .pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s * { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; min-width: 16px !important; min-height: 16px !important; padding: 0 !important; margin: 0 !important; }' +
+            'body.single-column .pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s, body.single-column .pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s * { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; min-width: 16px !important; min-height: 16px !important; padding: 0 !important; margin: 0 !important; }' +
+            '.pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s, .pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s * { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; min-width: 16px !important; min-height: 16px !important; padding: 0 !important; margin: 0 !important; }' +
+
+            // 7. 通用：所有非百科区域的16x16来源图标
+            'body.double-column .c-container:not(.pc-fresh-wrapper-con):not(.pc-fresh-wrapper-ext) div[class*="site-img"] .c-img-s { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; min-width: 16px !important; min-height: 16px !important; }' +
+            'body.double-column .c-container:not(.pc-fresh-wrapper-con):not(.pc-fresh-wrapper-ext) div[class*="site-img"] .c-img-s img { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; }' +
+
+            // ==========================================================================
+            // 修复置顶结果被遮挡的问题
+            // ==========================================================================
+            // 8. 给第一条结果（置顶的官方结果）增加底部 padding，腾出空间放蓝色标签，防止遮挡文字
+            '#content_left > .c-container:first-child, #content_left > .result:first-child, #content_left > .result-op:first-child { position: relative !important; padding-bottom: 35px !important; }';
 
 
     // ==============================================
