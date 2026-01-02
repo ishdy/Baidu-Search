@@ -271,7 +271,6 @@
           '{ overflow: visible !important; max-height: none !important; height: auto !important; display: block !important; }' +
 
           // 2. 强制双列模式下，复杂的百科大卡片占满整行 (100%宽度)
-          // 这样可以避免公交线路等复杂信息在半宽状态下被挤压错乱
           'body.double-column .c-container.pc-fresh-wrapper-con, ' +
           'body.double-column .c-container.c-group-wrapper, ' +
           'body.double-column .c-container[tpl="kg_entity_card"] ' +
