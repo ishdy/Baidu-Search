@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         百度全页面样式优化-去广告，深色模式-修复百科公交卡片
+// @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
 // @version      1.54
 // @icon         https://www.baidu.com/favicon.ico
-// @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。彻底修复百科卡片底部图标（播报、暂停、菜单）的换行堆叠问题。
+// @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc (Enhanced)
 // @match        *://www.baidu.com/*
 // @match        *://www1.baidu.com/*
