@@ -212,8 +212,10 @@
           '<button class="gm-search-button">百度一下</button>' +
           '</div>';
     const commonStyles =
-          '.gm-search-input { width: 600px; height: 42px; padding-left: 25px; border: 1px solid #c4c7ce !important; box-sizing: border-box !important; border-right: none !important; outline: none !important; font-size: 16px; color: #000; background: #fff; border-radius: 24px 0 0 24px; }' +
-          '.gm-search-input:focus { border-color: #4e6ef2 !important; }' +
+          // 修复点：添加 -webkit-appearance: none; 移除原生样式，确保无默认边框
+          '.gm-search-input { width: 600px; height: 42px; padding-left: 25px; border: 1px solid #c4c7ce !important; box-sizing: border-box !important; border-right: none !important; outline: none !important; font-size: 16px; color: #000; background: #fff; border-radius: 24px 0 0 24px; -webkit-appearance: none; }' +
+          // 修复点：强制移除 focus 状态下的 outline 和 box-shadow，防止点击时出现蓝色/黑色方框
+          '.gm-search-input:focus { border-color: #4e6ef2 !important; outline: none !important; box-shadow: none !important; }' +
           '.gm-search-button { height: 42px; padding: 0 25px; border: none !important; box-sizing: border-box !important; outline: none !important; cursor: pointer; font-size: 17px; background: #4e6ef2; border-radius: 0 24px 24px 0; color: #fff; display: flex; align-items: center; justify-content: center; white-space: nowrap; }' +
           '.gm-search-button:hover { background: #3079e8; }' +
           // =========================================================================
@@ -322,11 +324,11 @@
           '.tag-scroll_3EMBO { display: flex !important; flex-wrap: wrap !important; justify-content: center !important; gap: 5px !important; max-width: 100% !important; }' +
 
           // 对齐底部的相关搜索和翻页栏
-          'body.double-column #rs, body.double-column #page { max-width: 1400px !important; margin: 20px auto !important; padding: 0 10px !important; box-sizing: border-box !important; }' +
+          'body.double-column #rs, body.double-column #page { max-width: 1400px !important; margin: 20px auto !important; padding: 0 20px !important; box-sizing: border-box !important; }' +
           'body.double-column #rs > div, body.double-column #page > div { margin-left: 0 !important; margin-right: auto !important; }' +
 
           // ==========================================================================
-          // 针对双列模式下"右侧内容过窄"的精准修复
+          // 针对双列模式下"内容过窄"的精准修复
           // ==========================================================================
 
           // 1. 强制 c-span24 (通用的全宽容器) 占满 100%，修复窄内容
@@ -347,7 +349,7 @@
           'body.double-column .c-container > div, body.double-column .result-op > div { width: 100% !important; }' +
           'body.double-column .op-soft-title, body.double-column .op_soft_title { max-width: 100% !important; }' +
 
-          // 6. 强力修复 Gitee/开源项目卡片内容过窄的问题
+          // 6. 修复 Gitee/开源项目卡片内容过窄的问题
           'body.double-column [class*="open-source-software-blog-card"] section, ' +
           'body.double-column [class*="open-source-software-blog-card"] .blog-list-container, ' +
           'body.double-column [class*="open-source-software-blog-card"] .c-row { width: 100% !important; max-width: 100% !important; display: flex !important; }' +
@@ -400,7 +402,7 @@
             'body.double-column .c-span3 { width: 25% !important; float: left !important; }' +
             'body.double-column .c-span9 { width: 75% !important; float: right !important; }' +
             // ==========================================================================
-            // 强力修复: 针对多层嵌套的来源图标，强制所有子级为16px
+            // 针对多层嵌套的来源图标，强制所有子级为16px
             // ==========================================================================
             // 1. 锁定最外层容器及其所有后代元素的大小
             'body.double-column div[class*="site-img"], body.double-column div[class*="site-img"] * { width: 16px !important; height: 16px !important; max-width: 16px !important; min-width: 16px !important; flex: 0 0 16px !important; box-sizing: border-box !important; }' +
@@ -469,7 +471,19 @@
             // 修复置顶结果被遮挡的问题
             // ==========================================================================
             // 8. 给第一条结果（置顶的官方结果）增加底部 padding，腾出空间放蓝色标签，防止遮挡文字
-            '#content_left > .c-container:first-child, #content_left > .result:first-child, #content_left > .result-op:first-child { position: relative !important; padding-bottom: 35px !important; }';
+            '#content_left > .c-container:first-child, #content_left > .result:first-child, #content_left > .result-op:first-child { position: relative !important; padding-bottom: 35px !important; }' +
+
+            // ==========================================================================
+            // 修复百科/知识图谱卡片重叠 & 底部按钮对齐
+            // ==========================================================================
+            // 1. 强制取消 Flex 和高度限制，解决文字挤压，让卡片自然撑开
+            '.c-container[tpl="baike"], .c-container[tpl="kg_entity_card"], .c-container.pc-fresh-wrapper-con, .c-container.c-group-wrapper { display: block !important; height: auto !important; max-height: none !important; width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; overflow: visible !important; }' +
+
+            // 2. 强制底部来源栏沉底，拉开距离，并强制横向排列 (关键：display: flex 让按钮在一行)
+            '.pc-fresh-wrapper-con .source_1Vdff, .c-group-wrapper .source_1Vdff { position: relative !important; clear: both !important; margin-top: 15px !important; padding-top: 10px !important; display: flex !important; align-items: center !important; flex-wrap: nowrap !important; width: 100% !important; height: auto !important; }' +
+
+            // 3. 强制清除浮动，防止文字内容溢出覆盖底部
+            '.c-container[tpl="baike"]::after, .pc-fresh-wrapper-con::after { content: " " !important; display: table !important; clear: both !important; }';
 
 
     // ==============================================
@@ -495,7 +509,7 @@
                 const homepageStyles =
                       '#form, #s_form, .s_btn_wr, .s_ipt_wr, .fm, .ai-input, .s-center-box, #s_main, #s_new_search_guide, #bottom_layer, #bottom_space, #s_popup_advert, .popup-advert, .advert-shrink { display: none !important; }' +
                       '#lg, #lg img { display: block !important; opacity: 1 !important; visibility: visible !important; }' +
-                      '.gm-search-container { position: absolute; top: 220px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }';
+                      '.gm-search-container { position: absolute; top: 220px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex;}';
                 GM_addStyle(commonStyles + homepageStyles);
                 if (!document.querySelector('.gm-search-container')) {
                     document.body.insertAdjacentHTML('beforeend', customSearchBoxHTML);
@@ -791,7 +805,19 @@
                       'body.dark-mode .calender-box_3bBIx .calendar-tab_YVB65 .calendar-tab-box_3pHF1 .calendar-tab-content_3SYFq, body.dark-mode .calender-box_3bBIx .calendar-tab_YVB65 .calendar-tab-box_3pHF1 .calendar-tab-content_3SYFq * { color: #e8e6e3 !important; background-color: transparent !important; }' +
                       'body.dark-mode .calendar_1ggIJ .wrap_4tS72 .month-item_4SUiq .month-day_3eicC .month-day-text_2WHEx { color: #e8e6e3 !important; }' +
                       // 确保官方置顶样式在页面刷新后依然生效
-                      '#content_left > .c-container:first-child, #content_left > .result:first-child { position: relative; padding-bottom: 30px !important; }';
+                      '#content_left > .c-container:first-child, #content_left > .result:first-child { position: relative; padding-bottom: 30px !important; }' +
+
+                      // =========================================================================
+                      // 修复百科/知识图谱卡片重叠 & 底部按钮对齐
+                      // =========================================================================
+                      // 1. 强制取消 Flex 和高度限制，解决文字挤压，让卡片自然撑开
+                      '.c-container[tpl="baike"], .c-container[tpl="kg_entity_card"], .c-container.pc-fresh-wrapper-con, .c-container.c-group-wrapper { display: block !important; height: auto !important; max-height: none !important; width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; overflow: visible !important; }' +
+
+                      // 2. 强制底部来源栏沉底，拉开距离，并强制横向排列 (关键：display: flex 让按钮在一行)
+                      '.pc-fresh-wrapper-con .source_1Vdff, .c-group-wrapper .source_1Vdff { position: relative !important; clear: both !important; margin-top: 15px !important; padding-top: 10px !important; display: flex !important; align-items: center !important; flex-wrap: nowrap !important; width: 100% !important; height: auto !important; }' +
+
+                      // 3. 强制清除浮动，防止文字内容溢出覆盖底部
+                      '.c-container[tpl="baike"]::after, .pc-fresh-wrapper-con::after { content: " " !important; display: table !important; clear: both !important; }';
 
                 GM_addStyle(commonStyles + resultsPageStyles);
 
