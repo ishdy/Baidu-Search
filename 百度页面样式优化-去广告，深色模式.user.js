@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         百度全页面样式优化-去广告，深色模式
+// @name         百度全页面样式优化-去广告，深色模式-修复百科公交卡片
 // @namespace    http://tampermonkey.net/
-// @version      1.53
+// @version      1.54
 // @icon         https://www.baidu.com/favicon.ico
-// @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
+// @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。彻底修复百科卡片底部图标（播报、暂停、菜单）的换行堆叠问题。
 // @author       Ai-Rcccccccc (Enhanced)
 // @match        *://www.baidu.com/*
 // @match        *://www1.baidu.com/*
@@ -16,6 +16,8 @@
 // @run-at       document-start
 // @connect      *
 // @license      MIT
+// @downloadURL https://update.greasyfork.org/scripts/543000/%E7%99%BE%E5%BA%A6%E5%85%A8%E9%A1%B5%E9%9D%A2%E6%A0%B7%E5%BC%8F%E4%BC%98%E5%8C%96-%E5%8E%BB%E5%B9%BF%E5%91%8A%EF%BC%8C%E6%B7%B1%E8%89%B2%E6%A8%A1%E5%BC%8F.user.js
+// @updateURL https://update.greasyfork.org/scripts/543000/%E7%99%BE%E5%BA%A6%E5%85%A8%E9%A1%B5%E9%9D%A2%E6%A0%B7%E5%BC%8F%E4%BC%98%E5%8C%96-%E5%8E%BB%E5%B9%BF%E5%91%8A%EF%BC%8C%E6%B7%B1%E8%89%B2%E6%A8%A1%E5%BC%8F.meta.js
 // ==/UserScript==
 
 (function() {
@@ -257,9 +259,31 @@
           'body.double-column img, body.double-column video { max-width: 100% !important; max-height: 200px !important; height: auto !important; display: block !important; object-fit: cover !important; }' +
           'body.double-column .c-img, body.double-column .c-img6 { max-height: 200px !important; overflow: hidden !important; }' +
 
-          // 百科卡片特殊处理
-          'body.double-column .c-group-wrapper, body.double-column div[tpl*="baike"] { width: 100% !important; overflow: hidden !important; max-height: 500px !important; }' +
-          'body.double-column .c-group-wrapper .c-group-inner, body.double-column .c-group-wrapper ._content_1ml43_4, body.double-column .c-group-wrapper .content_309tE { width: 100% !important; padding: 15px !important; max-height: 450px !important; overflow: hidden !important; }' +
+          // =========================================================================
+          // 修复百科/知识图谱卡片布局 - 终极修复版
+          // =========================================================================
+          // 1. 彻底解除高度限制：针对所有百科类、聚合类容器
+          'body.double-column .c-group-wrapper, ' +
+          'body.double-column div[tpl*="baike"], ' +
+          'body.double-column div[data-module="baike"], ' +
+          'body.double-column .pc-fresh-wrapper-con, ' + // 针对新版百科和知识图谱
+          'body.double-column .c-container[tpl="kg_entity_card"] ' + // 针对知识图谱卡片
+          '{ overflow: visible !important; max-height: none !important; height: auto !important; display: block !important; }' +
+
+          // 2. 强制双列模式下，复杂的百科大卡片占满整行 (100%宽度)
+          // 这样可以避免公交线路等复杂信息在半宽状态下被挤压错乱
+          'body.double-column .c-container.pc-fresh-wrapper-con, ' +
+          'body.double-column .c-container.c-group-wrapper, ' +
+          'body.double-column .c-container[tpl="kg_entity_card"] ' +
+          '{ width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; margin-bottom: 20px !important; }' +
+
+          // 3. 解除内部内容限制
+          'body.double-column .c-group-wrapper .c-group-inner, ' +
+          'body.double-column .c-group-wrapper ._content_1ml43_4, ' +
+          'body.double-column .c-group-wrapper .content_309tE, ' +
+          'body.double-column .pc-fresh-wrapper-con .c-group-inner ' +
+          '{ width: 100% !important; padding: 15px !important; max-height: none !important; overflow: visible !important; }' +
+
           'body.double-column ._bg-header_1ml43_46 { width: 100% !important; padding: 15px 15px 0 15px !important; }' +
           'body.double-column .c-group-wrapper .sc-paragraph { max-height: 4.8em !important; overflow: hidden !important; display: -webkit-box !important; -webkit-line-clamp: 3 !important; -webkit-box-orient: vertical !important; }' +
 
@@ -343,19 +367,25 @@
           // 10. 右侧内容自动填充
           '.pc-fresh-wrapper-con .new-pmd .c-span9.main-info_4Q_kj, .bk_polysemy_1Ef6j .c-span9.main-info_4Q_kj { flex: 1 !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; }' +
 
-          // 11. 底部来源区域 - 横向排列按钮
-          '.pc-fresh-wrapper-con .source_1Vdff, .bk_polysemy_1Ef6j .source_1Vdff { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 10px !important; margin-top: 10px !important; }' +
+          // ==========================================================================
+          // 修复底部来源区域、播报/暂停、菜单栏对齐问题
+          // ==========================================================================
+          // 11. 底部来源容器 - 强制单行、不换行、子元素垂直居中
+          '.pc-fresh-wrapper-con .source_1Vdff, .bk_polysemy_1Ef6j .source_1Vdff { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; justify-content: flex-start !important; width: 100% !important; white-space: nowrap !important; margin-top: 10px !important; }' +
 
-          // 12. 底部链接样式
-          '.pc-fresh-wrapper-con .siteLink_9TPP3, .bk_polysemy_1Ef6j .siteLink_9TPP3 { display: flex !important; align-items: center !important; gap: 5px !important; }' +
+          // 12. 底部链接/来源图标 - 防止压缩
+          '.pc-fresh-wrapper-con .siteLink_9TPP3, .bk_polysemy_1Ef6j .siteLink_9TPP3 { flex-shrink: 0 !important; margin-right: 15px !important; display: flex !important; align-items: center !important; }' +
 
-          // 13. 举报按钮不重叠
-          '.pc-fresh-wrapper-con .c-tools, .bk_polysemy_1Ef6j .c-tools { display: flex !important; align-items: center !important; margin-left: auto !important; }' +
+          // 13. 播报/暂停组件容器 - 强制横向排列 (flex-direction: row)，不换行
+          '.pc-fresh-wrapper-con .tts-wrapper_1Lt-9, .bk_polysemy_1Ef6j .tts-wrapper_1Lt-9, div[class*="tts-wrapper"] { display: flex !important; flex-direction: row !important; align-items: center !important; margin-right: auto !important; flex-shrink: 0 !important; }' +
 
-          // 14. 播报按钮横向排列
-          '.pc-fresh-wrapper-con .tts-wrapper_1Lt-9, .bk_polysemy_1Ef6j .tts-wrapper_1Lt-9 { display: inline-flex !important; margin-left: 10px !important; }' +
+          // 14. 具体的播报/暂停按钮 - 强制横向内联
+          'div[class*="tts-wrapper"] > div, div[class*="tts-wrapper"] .voice-btn { display: inline-flex !important; align-items: center !important; margin-right: 10px !important; }' +
 
-          // 15. 双列模式下视频包装器样式优化
+          // 15. 右侧工具栏（举报/菜单箭头） - 强制推到最右侧
+          '.pc-fresh-wrapper-con .c-tools, .bk_polysemy_1Ef6j .c-tools { margin-left: auto !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; position: static !important; }' +
+
+          // 16. 双列模式下视频包装器样式优化
           'body.double-column .bk_polysemy_1Ef6j .video-wrapper_MQNVE { width: 10% !important; height: 16px !important; margin-bottom: 8px !important; position: relative !important; border: 1px solid rgba(0, 0, 0, 0.05) !important; border-radius: 12px !important; overflow: hidden !important; -webkit-mask-image: -webkit-radial-gradient(white, black) !important; }' +
 
 
