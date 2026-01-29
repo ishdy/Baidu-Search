@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
-// @version      1.56
+// @version      1.57
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc (Enhanced)
@@ -505,14 +505,54 @@
             // ==============================================
             // PC 端逻辑继续执行
             // ==============================================
-            if (window.location.pathname === '/') {
+                       if (window.location.pathname === '/' || (window.location.pathname === '/index.php' && !window.location.search.includes('wd'))) {
                 const homepageStyles =
-                      '#form, #s_form, .s_btn_wr, .s_ipt_wr, .fm, .ai-input, .s-center-box, #s_main, #s_new_search_guide, #bottom_layer, #bottom_space, #s_popup_advert, .popup-advert, .advert-shrink { display: none !important; }' +
-                      '#lg, #lg img { display: block !important; opacity: 1 !important; visibility: visible !important; }' +
-                      '.gm-search-container { position: absolute; top: 220px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex;}';
+                      // 1. 隐藏多余元素
+                      '#form, #s_form, .s_btn_wr, .s_ipt_wr, .fm, .ai-input, .s-center-box, #s_new_search_guide, #bottom_layer, #bottom_space, #s_popup_advert, .popup-advert, .advert-shrink, .pc-dashboard, .pcsearch-common-ai-dashboard { display: none !important; }' +
+
+                      // 2. Logo 向上大幅度移动
+                      '#lg { ' +
+                      '    display: flex !important; ' +
+                      '    justify-content: center !important; ' +
+                      '    align-items: center !important; ' +
+                      '    margin-top: 5vh !important; ' + // 这里减小了高度，5vh 距离顶部很近
+                      '    padding-top: 0 !important; ' +
+                      '    height: 190px !important; ' +
+                      '    opacity: 1 !important; ' +
+                      '    visibility: visible !important; ' +
+                      '    position: relative !important; ' +
+                      '}' +
+
+                      // 3. 修复 Logo 图片在浅色模式下的反色问题
+                      '#lg img { ' +
+                      '    filter: none !important; ' +
+                      '    width: 270px !important; ' +
+                      '    height: 129px !important; ' +
+                      '}' +
+                      'body.dark-mode #lg img { filter: invert(0.9) hue-rotate(180deg) !important; }' +
+
+                      // 4. 搜索框紧贴 Logo
+                      '.gm-search-container { ' +
+                      '    position: relative !important; ' +
+                      '    top: 0px !important; ' + // 向上微调搜索框，使其靠近 Logo
+                      '    left: 0 !important; ' +
+                      '    transform: none !important; ' +
+                      '    display: flex !important; ' +
+                      '    justify-content: center !important; ' +
+                      '    margin: 0 auto !important; ' +
+                      '    z-index: 10; ' +
+                      '}';
+
                 GM_addStyle(commonStyles + homepageStyles);
+
+                // 确保布局顺序：Logo 后面直接跟搜索框
                 if (!document.querySelector('.gm-search-container')) {
-                    document.body.insertAdjacentHTML('beforeend', customSearchBoxHTML);
+                    const logo = document.getElementById('lg');
+                    if (logo) {
+                        logo.insertAdjacentHTML('afterend', customSearchBoxHTML);
+                    } else {
+                        document.body.insertAdjacentHTML('beforeend', customSearchBoxHTML);
+                    }
                     document.querySelector('.gm-search-input')?.focus();
                     attachEventListeners();
                 }
