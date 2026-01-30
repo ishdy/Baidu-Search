@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
-// @version      1.58
+// @version      1.59
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc (Enhanced)
@@ -313,6 +313,93 @@
           // 更多内容按钮样式
           'body.double-column .c-moreinfo, body.double-column .show-more { display: inline-block !important; color: #4e6ef2 !important; cursor: pointer !important; margin-top: 8px !important; }' +
 
+// =========================================================================
+// 🔥🔥🔥 单列模式百科图片修复（追加到单列模式样式后）
+// =========================================================================
+'body.single-column .rel-baike_2iWln .image-wrapper_39wYE, ' +
+'body.single-column .rel-baike_2iWln .c-img, ' +
+'body.single-column .lemma-item_1MZZu .c-img ' +
+'{ width: 60px !important; height: 60px !important; ' +
+'min-width: 60px !important; min-height: 60px !important; ' +
+'max-width: 60px !important; max-height: 60px !important; ' +
+'padding-bottom: 0 !important; position: relative !important; ' +
+'display: block !important; overflow: hidden !important; ' +
+'border-radius: 8px !important; }' +
+
+'body.single-column .rel-baike_2iWln .c-img img, ' +
+'body.single-column .lemma-item_1MZZu .c-img img ' +
+'{ position: static !important; width: 100% !important; height: 100% !important; ' +
+'max-width: 60px !important; max-height: 60px !important; ' +
+'object-fit: cover !important; display: block !important; }' +
+
+'body.single-column .lemma-item_1MZZu ' +
+'{ display: flex !important; flex-direction: row !important; ' +
+'align-items: flex-start !important; gap: 12px !important; ' +
+'padding: 12px 0 !important; min-height: 70px !important; }' +
+
+'body.single-column .lemma-item_1MZZu .c-span2 ' +
+'{ flex: 0 0 60px !important; width: 60px !important; ' +
+'max-width: 60px !important; margin: 0 !important; float: none !important; }' +
+
+'body.single-column .lemma-item_1MZZu .c-span10 ' +
+'{ flex: 1 !important; width: auto !important; ' +
+'min-width: 0 !important; float: none !important; }' +
+
+// =========================================================================
+// 🔥🔥🔥 双列模式百科图片"竖条"问题终极修复
+// =========================================================================
+'body.double-column .rel-baike_2iWln .image-wrapper_39wYE, ' +
+'body.double-column .rel-baike_2iWln .c-img, ' +
+'body.double-column .lemma-item_1MZZu .c-img, ' +
+'body.double-column div[tpl="rel-baike"] .c-img, ' +
+'body.double-column div[tpl="rel-baike"] .image-wrapper_39wYE ' +
+'{ width: 60px !important; height: 60px !important; ' +
+'min-width: 60px !important; min-height: 60px !important; ' +
+'max-width: 60px !important; max-height: 60px !important; ' +
+'padding: 0 !important; padding-bottom: 0 !important; ' +
+'position: relative !important; display: block !important; ' +
+'overflow: hidden !important; border-radius: 8px !important; }' +
+
+'body.double-column .rel-baike_2iWln .c-img img, ' +
+'body.double-column .lemma-item_1MZZu .c-img img, ' +
+'body.double-column div[tpl="rel-baike"] .c-img img ' +
+'{ position: static !important; width: 100% !important; height: 100% !important; ' +
+'max-width: 60px !important; max-height: 60px !important; ' +
+'object-fit: cover !important; display: block !important; }' +
+
+'body.double-column .lemma-item_1MZZu, ' +
+'body.double-column div[tpl="rel-baike"] .lemma-item_1MZZu ' +
+'{ display: flex !important; flex-direction: row !important; ' +
+'align-items: flex-start !important; gap: 12px !important; ' +
+'padding: 12px 0 !important; min-height: 70px !important; }' +
+
+'body.double-column .lemma-item_1MZZu .c-span2, ' +
+'body.double-column div[tpl="rel-baike"] .c-span2 ' +
+'{ flex: 0 0 60px !important; width: 60px !important; ' +
+'max-width: 60px !important; margin: 0 12px 0 0 !important; ' +
+'float: none !important; }' +
+
+'body.double-column .lemma-item_1MZZu .c-span10, ' +
+'body.double-column div[tpl="rel-baike"] .c-span10 ' +
+'{ flex: 1 !important; width: auto !important; ' +
+'min-width: 0 !important; float: none !important; }' +
+
+// =========================================================================
+// 🔥🔥🔥 百科卡片50%宽度强制修复（最高优先级）
+// =========================================================================
+'body.double-column #content_left > .result-op[tpl="rel-baike"], ' +
+'body.double-column #content_left > div[tpl="rel-baike"], ' +
+'body.double-column #content_left > .c-container[tpl="rel-baike"], ' +
+'body.double-column .result-op.c-container[tpl="rel-baike"], ' +
+'body.double-column div.c-group-wrapper[tpl="rel-baike"] ' +
+'{ width: calc(50% - 10px) !important; max-width: calc(50% - 10px) !important; ' +
+'min-width: calc(50% - 10px) !important; flex: 0 0 calc(50% - 10px) !important; ' +
+'flex-basis: calc(50% - 10px) !important; flex-grow: 0 !important; ' +
+'flex-shrink: 0 !important; margin: 0 !important; padding: 20px !important; ' +
+'box-sizing: border-box !important; }' +
+
+
+
           // 响应式：小屏幕自动单列
           '@media (max-width: 1200px) { body.double-column #container.sam_newgrid, body.double-column #content_left { grid-template-columns: 1fr !important; } body.double-column .c-container, body.double-column .result-op, body.double-column .result { max-height: none !important; min-height: auto !important; } }' +
 
@@ -467,6 +554,68 @@
             'body.double-column .c-container:not(.pc-fresh-wrapper-con):not(.pc-fresh-wrapper-ext) div[class*="site-img"] .c-img-s { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; min-width: 16px !important; min-height: 16px !important; }' +
             'body.double-column .c-container:not(.pc-fresh-wrapper-con):not(.pc-fresh-wrapper-ext) div[class*="site-img"] .c-img-s img { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; }' +
 
+
+          // ==========================================================================
+          // 百科/关联卡片图片“长条化”彻底矫正
+          // ==========================================================================
+
+          // 1. 锁定 lemma-item 容器，强制使用 Flex 布局并允许内容撑开高度
+          'div[tpl="rel-baike"] .lemma-item_1MZZu, .rel-baike_2iWln .lemma-item_1MZZu { ' +
+          '    display: flex !important; ' +
+          '    flex-direction: row !important; ' +
+          '    align-items: flex-start !important; ' +
+          '    height: auto !important; ' +
+          '    min-height: 80px !important; ' +
+          '    padding: 12px 0 !important; ' +
+          '}' +
+
+          // 2. 彻底重置左侧图片包装层 (c-span2)，干掉所有浮动和百分比限制
+          'div[tpl="rel-baike"] .c-span2, .rel-baike_2iWln .c-span2 { ' +
+          '    width: 66px !important; ' +
+          '    flex: 0 0 66px !important; ' +
+          '    max-width: 66px !important; ' +
+          '    margin: 0 12px 0 0 !important; ' +
+          '    float: none !important; ' +
+          '}' +
+
+          // 3. 核心：强制重置百度用来占位的容器，解决“扁条”现象
+          // 我们必须给它一个固定的宽高，并取消 padding-bottom: 100% 之类的设置
+          'div[tpl="rel-baike"] .c-img, div[tpl="rel-baike"] .image-wrapper_39wYE, .rel-baike_2iWln .c-img { ' +
+          '    width: 60px !important; ' +
+          '    height: 60px !important; ' +
+          '    padding-bottom: 0 !important; ' + // 杀掉导致塌陷的元凶
+          '    position: relative !important; ' +
+          '    display: block !important; ' +
+          '    overflow: hidden !important; ' +
+          '}' +
+
+          // 4. 图片本身：取消绝对定位，改用正常的缩放模式
+          'div[tpl="rel-baike"] .c-img img, .rel-baike_2iWln .c-img img { ' +
+          '    position: static !important; ' + // 极其重要：取消 absolute，防止它飘走
+          '    width: 100% !important; ' +
+          '    height: 100% !important; ' +
+          '    max-width: 60px !important; ' +
+          '    max-height: 60px !important; ' +
+          '    object-fit: cover !important; ' +
+          '    border-radius: 8px !important; ' +
+          '}' +
+
+          // 5. 右侧文字区域：强制占据剩余所有空间，防止重叠
+          'div[tpl="rel-baike"] .c-span10, .rel-baike_2iWln .c-span10 { ' +
+          '    flex: 1 !important; ' +
+          '    width: auto !important; ' +
+          '    max-width: none !important; ' +
+          '    float: none !important; ' +
+          '    padding: 0 !important; ' +
+          '}' +
+
+          // 6. 深色模式修正：去掉图片后面难看的白色底块
+          'body.dark-mode .rel-baike_2iWln .c-img, ' +
+          'body.dark-mode .rel-baike_2iWln .c-img-border { ' +
+          '    background: transparent !important; ' +
+          '    border: none !important; ' +
+          '}' +
+
             // ==========================================================================
             // 修复置顶结果被遮挡的问题
             // ==========================================================================
@@ -477,13 +626,14 @@
             // 修复百科/知识图谱卡片重叠 & 底部按钮对齐
             // ==========================================================================
             // 1. 强制取消 Flex 和高度限制，解决文字挤压，让卡片自然撑开
-            '.c-container[tpl="baike"], .c-container[tpl="kg_entity_card"], .c-container.pc-fresh-wrapper-con, .c-container.c-group-wrapper { display: block !important; height: auto !important; max-height: none !important; width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; overflow: visible !important; }' +
+            '.c-container[tpl="baike"], .c-container[tpl="kg_entity_card"], .c-container.pc-fresh-wrapper-con, .c-container.c-group-wrapper { display: block !important; height: auto !important; max-height: none !important; width: 50% !important; max-width: 100% !important; flex: 0 0 100% !important; overflow: visible !important; }' +
 
             // 2. 强制底部来源栏沉底，拉开距离，并强制横向排列 (关键：display: flex 让按钮在一行)
-            '.pc-fresh-wrapper-con .source_1Vdff, .c-group-wrapper .source_1Vdff { position: relative !important; clear: both !important; margin-top: 15px !important; padding-top: 10px !important; display: flex !important; align-items: center !important; flex-wrap: nowrap !important; width: 100% !important; height: auto !important; }' +
+            '.pc-fresh-wrapper-con .source_1Vdff, .c-group-wrapper .source_1Vdff { position: relative !important; clear: both !important; margin-top: 15px !important; padding-top: 10px !important; display: flex !important; align-items: center !important; flex-wrap: nowrap !important; width: 50% !important; height: auto !important; }' +
 
             // 3. 强制清除浮动，防止文字内容溢出覆盖底部
             '.c-container[tpl="baike"]::after, .pc-fresh-wrapper-con::after { content: " " !important; display: table !important; clear: both !important; }';
+
 
 
     // ==============================================
@@ -824,6 +974,7 @@
                       'body.dark-mode .orientation-title-wrapper_YgpKw { background-color: transparent !important; }' +
                       'body.dark-mode .pc-fresh-title-con ._paragraph_klgk1_2, body.dark-mode .pc_Al2N0 .lineheight-normal_1msvK { color: #000 !important; }' +
                       'body.dark-mode .short-answer_bpGXV { color: #e8e6e3 !important; }' +
+
 
                       'body.dark-mode .cos-select-option-text { color: #e8e6e3 !important; }' +
                       'body.dark-mode .cos-popover { background-color: #3c4043 !important; color: #e8e6e3 !important; border: 1px solid #5f6368 !important; }' +
