@@ -55,6 +55,8 @@
 # Baidu-search 更新日志
 
 <br>
+v1.58<br>
+删除1.57版本中默认屏蔽的"百度AI创作".pc-dashboard, .pcsearch-common-ai-dashboard,因为百度设置中可以自行选择是否关闭<br>
 v1.57<br>
 1.修复百度首页logo和搜索框定位,防止开启或关闭热搜后logo发生位移<br>
 2.修复浅色模式下logo反色问题<br>
