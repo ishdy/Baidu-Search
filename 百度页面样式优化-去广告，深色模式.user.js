@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
-// @version      1.60
+// @version      1.61
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc (Enhanced)
@@ -24,6 +24,90 @@
     'use strict';
 
     // ==============================================
+    // 遮罩拦截 + 加载动画
+    // ==============================================
+    //  CSS预隐藏
+    const hideStyle = document.createElement('style');
+    hideStyle.textContent = '.search-quit-dialog-wrap, ._2lMH_ { display: none !important; opacity: 0 !important; }';
+    (document.head || document.documentElement).appendChild(hideStyle);
+
+    //  实时拦截（2ms）
+    setInterval(() => {
+        document.querySelectorAll('*').forEach(el => {
+            const style = window.getComputedStyle(el);
+            if (
+                el.id !== 'gm-loading' &&
+                el.id !== 'settings-panel' &&
+                el.id !== 'settings-toggle' &&
+                el.id !== 'back-to-top' &&
+                !el.id.includes('gm-') &&
+                (style.position === 'fixed' || style.position === 'absolute') &&
+                parseInt(style.zIndex) > 100 &&
+                el.offsetWidth > window.innerWidth * 0.75 &&
+                el.offsetHeight > window.innerHeight * 0.75 &&
+                (style.backgroundColor.includes('rgba') || parseFloat(style.opacity) < 1 || style.backdropFilter !== 'none')
+            ) {
+                el.style.cssText = 'display: none !important; visibility: hidden !important;';
+            }
+        });
+    }, 2);
+
+    //  MutationObserver即时删除
+    new MutationObserver(mutations => {
+        mutations.forEach(m => {
+            m.addedNodes.forEach(node => {
+                if (node.nodeType === 1 && (
+                    node.classList?.contains('search-quit-dialog-wrap') ||
+                    node.classList?.contains('_2lMH_')
+                )) {
+                    node.remove();
+                    console.log('[遮罩拦截] 已删除:', node.className || node.id);
+                }
+            });
+        });
+    }).observe(document.documentElement, { childList: true, subtree: true });
+
+    //  点击筛选按钮时显示加载动画（纯净版 - 无背景）
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.tag-item_3Z1mA, .tag-common_8ztfL, [class*="tag-"]')) {
+            let loader = document.getElementById('gm-loading');
+            if (!loader) {
+                loader = document.createElement('div');
+                loader.id = 'gm-loading';
+
+                const isDark = document.body.classList.contains('dark-mode');
+                const textColor = isDark ? '#e8e6e3' : '#666';
+
+                loader.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999999;display:flex;align-items:center;flex-direction:column;';
+                loader.innerHTML =
+                    '<div style="display:flex;gap:8px;">' +
+                        '<div style="width:12px;height:12px;background:#4e6ef2;border-radius:50%;animation:bounce 1.4s ease-in-out infinite;box-shadow:0 2px 6px rgba(78,110,242,0.4);"></div>' +
+                        '<div style="width:12px;height:12px;background:#4e6ef2;border-radius:50%;animation:bounce 1.4s ease-in-out 0.2s infinite;box-shadow:0 2px 6px rgba(78,110,242,0.4);"></div>' +
+                        '<div style="width:12px;height:12px;background:#4e6ef2;border-radius:50%;animation:bounce 1.4s ease-in-out 0.4s infinite;box-shadow:0 2px 6px rgba(78,110,242,0.4);"></div>' +
+                    '</div>' +
+                    '<div style="margin-top:15px;font-size:14px;color:' + textColor + ';font-weight:500;text-shadow:0 1px 3px rgba(0,0,0,0.2);">加载中...</div>' +
+                    '<style>' +
+                        '@keyframes bounce {' +
+                            '0%, 80%, 100% { transform: translateY(0); }' +
+                            '40% { transform: translateY(-12px); }' +
+                        '}' +
+                    '</style>';
+                document.body.appendChild(loader);
+            }
+            loader.style.display = 'flex';
+
+            setTimeout(() => {
+                const obs = new MutationObserver(() => {
+                    loader.style.display = 'none';
+                    obs.disconnect();
+                });
+                obs.observe(document.querySelector('#content_left') || document.body, {childList:true, subtree:true});
+                setTimeout(() => loader.style.display = 'none', 3000);
+            }, 50);
+        }
+    }, true);
+
+    // ==============================================
     // 稳定可靠的防闪烁/防白屏技术
     // ==============================================
     const observer = new MutationObserver(() => {
@@ -37,9 +121,8 @@
         childList: true
     });
 
-    // ==============================================
+
     // 重定向功能工具函数
-    // ==============================================
     function getUrlAttribute(baseUrl = location.href, attribute, needDecode = true) {
         const [, search = ''] = baseUrl.split("?");
         const searchValue = search.split("&");
@@ -61,9 +144,8 @@
         }
     }
 
-    // ==============================================
+
     // 重定向处理核心函数
-    // ==============================================
     function removeMobileBaiduDirectLink() {
         const nodes = document.querySelectorAll("#page #page-bd #results .result:not([ac_redirectStatus])");
         nodes.forEach(curNode => {
@@ -207,7 +289,7 @@
 
     function showToast(message) {
         const toast = document.createElement('div');
-        toast.style.cssText = `position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); color: white; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 10001; box-shadow: 0 4px 12px rgba(0,0,0,0.3);`;
+        toast.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); color: white; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 10001; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
         toast.textContent = message;
         document.body.appendChild(toast);
         setTimeout(() => {
@@ -286,7 +368,6 @@
                         const contentLeft = document.querySelector('#content_left');
 
                         if (!contentLeft) throw new Error('未找到 #content_left');
-
                         let addedCount = 0;
                         let currentPageElement = document.querySelector('#page');
 
@@ -380,42 +461,75 @@
         '<button class="gm-search-button">百度一下</button>' +
         '</div>';
     const commonStyles =
+
+        // ==========================================================================
+        //  加载动画样式
+        // ==========================================================================
+        '#gm-loading-overlay { ' +
+        'position: fixed !important; top: 0 !important; left: 0 !important; ' +
+        'width: 100% !important; height: 100% !important; ' +
+        'background: rgba(255, 255, 255, 0.95) !important; ' +
+        'z-index: 999999 !important; display: none !important; ' +
+        'flex-direction: column !important; align-items: center !important; ' +
+        'justify-content: center !important; }' +
+        '.gm-loading-spinner { ' +
+        'width: 50px !important; height: 50px !important; ' +
+        'border: 4px solid #e0e0e0 !important; ' +
+        'border-top-color: #4e6ef2 !important; ' +
+        'border-radius: 50% !important; ' +
+        'animation: gm-spin 0.8s linear infinite !important; }' +
+        '.gm-loading-text { ' +
+        'margin-top: 20px !important; font-size: 16px !important; ' +
+        'color: #666 !important; font-weight: 500 !important; }' +
+        '@keyframes gm-spin { ' +
+        '0% { transform: rotate(0deg); } ' +
+        '100% { transform: rotate(360deg); } }' +
+        'body.dark-mode #gm-loading-overlay { ' +
+        'background: rgba(26, 26, 26, 0.95) !important; }' +
+        'body.dark-mode .gm-loading-text { color: #e8e6e3 !important; }' +
+        'body.dark-mode .gm-loading-spinner { ' +
+        'border-color: #444 !important; border-top-color: #4e6ef2 !important; }' +
+
         // 修复点：添加 -webkit-appearance: none; 移除原生样式，确保无默认边框
         '.gm-search-input { width: 600px; height: 42px; padding-left: 25px; border: 1px solid #c4c7ce !important; box-sizing: border-box !important; border-right: none !important; outline: none !important; font-size: 16px; color: #000; background: #fff; border-radius: 24px 0 0 24px; -webkit-appearance: none; }' +
+
         // 修复点：强制移除 focus 状态下的 outline 和 box-shadow，防止点击时出现蓝色/黑色方框
         '.gm-search-input:focus { border-color: #4e6ef2 !important; outline: none !important; box-shadow: none !important; }' +
         '.gm-search-button { height: 42px; padding: 0 25px; border: none !important; box-sizing: border-box !important; outline: none !important; cursor: pointer; font-size: 17px; background: #4e6ef2; border-radius: 0 24px 24px 0; color: #fff; display: flex; align-items: center; justify-content: center; white-space: nowrap; }' +
         '.gm-search-button:hover { background: #3079e8; }' +
-        // =========================================================================
+
         // 优化置顶提示样式：使用极高优先级选择器，防止被通用样式拉伸
-        // =========================================================================
         'body #content_left .c-container .gm-official-hint { ' +
         'position: absolute !important; left: 0 !important; bottom: 0 !important; top: auto !important; right: auto !important; ' +
         'width: auto !important; min-width: 0 !important; max-width: none !important; height: 30px !important; line-height: 30px !important; ' +
         'padding: 0 12px !important; margin: 0 !important; background: #4e6ef2 !important; color: white !important; ' +
         'border-radius: 0 10px 0 0 !important; font-size: 13px !important; ' +
         'box-shadow: 2px -2px 5px rgba(0,0,0,0.1) !important; z-index: 999 !important; flex: none !important; }' +
-
         '.gm-host-name { color: #666; font-size: 13px; margin-left: 4px; }' +
         '.gm-host-separator { color: #999; }' +
         'body.dark-mode .gm-host-name { color: #aaa; }' +
         'body.dark-mode .gm-host-separator { color: #777; }' +
 
+        // ==============================================
         // 如果你希望彻底看不见这个提示，可以使用下面这一行代替上面的所有代码：
+        // ==============================================
         // 'body.double-column .k8vt8hp { display: none !important; }' +
 
         // 单列布局样式
         'body.single-column #container.sam_newgrid, body.single-column #content_left, body.single-column .wrapper_new #content_left, body.single-column #container.sam_newgrid #content_left { width: 100% !important; max-width: 1200px !important; margin: 0 auto !important; padding: 0 !important; display: flex !important; flex-direction: column !important; align-items: center !important; }' +
         'body.single-column .c-container, body.single-column .result-op, body.single-column .result { width: 100% !important; max-width: 800px !important; margin: 0 auto 25px auto !important; padding: 25px !important; border-radius: 10px !important; box-shadow: 0 3px 10px rgba(0,0,0,0.08) !important; background-color: #fff !important; transition: all 0.3s ease !important; box-sizing: border-box !important; position: relative !important; }' +
         'body.single-column #content_left > .c-container:first-child { margin-top: 30px !important; }' +
+
         // 修复单列模式下 来源图标(如百度百科)显示过大的问题
         'body.single-column div[class*="site-img"], body.single-column div[class*="site-img"] *, body.single-column .c-img-s { width: 16px !important; height: 16px !important; max-width: 16px !important; min-width: 16px !important; overflow: hidden !important; }' +
 
         // 双列布局样式
         'body.double-column #container.sam_newgrid, body.double-column #content_left, body.double-column .wrapper_new #content_left, body.double-column #container.sam_newgrid #content_left { width: 100% !important; max-width: 1400px !important; margin: 0 auto !important; padding: 10px !important; display: flex !important; flex-wrap: wrap !important; gap: 20px !important; align-items: stretch !important; justify-content: space-between !important; }' +
         'body.double-column .c-container, body.double-column .result-op, body.double-column .result { width: calc(50% - 10px) !important; margin: 0 !important; padding: 20px !important; border-radius: 10px !important; box-shadow: 0 3px 10px rgba(0,0,0,0.08) !important; background-color: #fff !important; transition: all 0.3s ease !important; box-sizing: border-box !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; max-height: 380px !important; position: relative !important; }' +
+
         // 强制双列模式下，第一个子元素（即置顶的官网）也必须遵守 50% 宽度
         'body.double-column #content_left > .c-container:first-child, body.double-column #content_left > .result:first-child, body.double-column #content_left > .result-op:first-child { width: calc(50% - 10px) !important; max-width: calc(50% - 10px) !important; flex: 0 0 calc(50% - 10px) !important; margin: 0 !important; }' +
+
         // 确保置顶卡片内部内容不撑开
         'body.double-column #content_left > .c-container:first-child *, body.double-column #content_left > .result:first-child *, body.double-column #content_left > .result-op:first-child * { max-width: 100% !important; }' +
 
@@ -431,10 +545,10 @@
         'body.double-column img, body.double-column video { max-width: 100% !important; max-height: 200px !important; height: auto !important; display: block !important; object-fit: cover !important; }' +
         'body.double-column .c-img, body.double-column .c-img6 { max-height: 200px !important; overflow: hidden !important; }' +
 
-        // =========================================================================
+        // ==============================================
         // 修复百科/知识图谱卡片布局
-        // =========================================================================
-        // 1. 彻底解除高度限制：针对所有百科类、聚合类容器
+        // ==============================================
+        //  彻底解除高度限制：针对所有百科类、聚合类容器
         'body.double-column .c-group-wrapper, ' +
         'body.double-column div[tpl*="baike"], ' +
         'body.double-column div[data-module="baike"], ' +
@@ -442,19 +556,18 @@
         'body.double-column .c-container[tpl="kg_entity_card"] ' + // 针对知识图谱卡片
         '{ overflow: visible !important; max-height: none !important; height: auto !important; display: block !important; }' +
 
-        // 2. 强制双列模式下，复杂的百科大卡片占满整行 (100%宽度)
+        // 强制双列模式下，复杂的百科大卡片占满整行 (100%宽度)
         'body.double-column .c-container.pc-fresh-wrapper-con, ' +
         'body.double-column .c-container.c-group-wrapper, ' +
         'body.double-column .c-container[tpl="kg_entity_card"] ' +
         '{ width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; margin-bottom: 20px !important; }' +
 
-        // 3. 解除内部内容限制
+        // 解除内部内容限制
         'body.double-column .c-group-wrapper .c-group-inner, ' +
         'body.double-column .c-group-wrapper ._content_1ml43_4, ' +
         'body.double-column .c-group-wrapper .content_309tE, ' +
         'body.double-column .pc-fresh-wrapper-con .c-group-inner ' +
         '{ width: 100% !important; padding: 15px !important; max-height: none !important; overflow: visible !important; }' +
-
         'body.double-column ._bg-header_1ml43_46 { width: 100% !important; padding: 15px 15px 0 15px !important; }' +
         'body.double-column .c-group-wrapper .sc-paragraph { max-height: 4.8em !important; overflow: hidden !important; display: -webkit-box !important; -webkit-line-clamp: 3 !important; -webkit-box-orient: vertical !important; }' +
 
@@ -483,9 +596,7 @@
         // 更多内容按钮样式
         'body.double-column .c-moreinfo, body.double-column .show-more { display: inline-block !important; color: #4e6ef2 !important; cursor: pointer !important; margin-top: 8px !important; }' +
 
-        // =========================================================================
-        // 🔥🔥🔥 单列模式百科图片修复（追加到单列模式样式后）
-        // =========================================================================
+        //  单列模式百科图片修复（追加到单列模式样式后）
         'body.single-column .rel-baike_2iWln .image-wrapper_39wYE, ' +
         'body.single-column .rel-baike_2iWln .c-img, ' +
         'body.single-column .lemma-item_1MZZu .c-img ' +
@@ -495,29 +606,24 @@
         'padding-bottom: 0 !important; position: relative !important; ' +
         'display: block !important; overflow: hidden !important; ' +
         'border-radius: 8px !important; }' +
-
         'body.single-column .rel-baike_2iWln .c-img img, ' +
         'body.single-column .lemma-item_1MZZu .c-img img ' +
         '{ position: static !important; width: 100% !important; height: 100% !important; ' +
         'max-width: 60px !important; max-height: 60px !important; ' +
         'object-fit: cover !important; display: block !important; }' +
-
         'body.single-column .lemma-item_1MZZu ' +
         '{ display: flex !important; flex-direction: row !important; ' +
         'align-items: flex-start !important; gap: 12px !important; ' +
         'padding: 12px 0 !important; min-height: 70px !important; }' +
-
         'body.single-column .lemma-item_1MZZu .c-span2 ' +
         '{ flex: 0 0 60px !important; width: 60px !important; ' +
         'max-width: 60px !important; margin: 0 !important; float: none !important; }' +
-
         'body.single-column .lemma-item_1MZZu .c-span10 ' +
         '{ flex: 1 !important; width: auto !important; ' +
         'min-width: 0 !important; float: none !important; }' +
 
-        // =========================================================================
-        // 🔥🔥🔥 双列模式百科图片"竖条"问题终极修复
-        // =========================================================================
+
+        //  双列模式百科图片"竖条"问题终极修复
         'body.double-column .rel-baike_2iWln .image-wrapper_39wYE, ' +
         'body.double-column .rel-baike_2iWln .c-img, ' +
         'body.double-column .lemma-item_1MZZu .c-img, ' +
@@ -529,34 +635,29 @@
         'padding: 0 !important; padding-bottom: 0 !important; ' +
         'position: relative !important; display: block !important; ' +
         'overflow: hidden !important; border-radius: 8px !important; }' +
-
         'body.double-column .rel-baike_2iWln .c-img img, ' +
         'body.double-column .lemma-item_1MZZu .c-img img, ' +
         'body.double-column div[tpl="rel-baike"] .c-img img ' +
         '{ position: static !important; width: 100% !important; height: 100% !important; ' +
         'max-width: 60px !important; max-height: 60px !important; ' +
         'object-fit: cover !important; display: block !important; }' +
-
         'body.double-column .lemma-item_1MZZu, ' +
         'body.double-column div[tpl="rel-baike"] .lemma-item_1MZZu ' +
         '{ display: flex !important; flex-direction: row !important; ' +
         'align-items: flex-start !important; gap: 12px !important; ' +
         'padding: 12px 0 !important; min-height: 70px !important; }' +
-
         'body.double-column .lemma-item_1MZZu .c-span2, ' +
         'body.double-column div[tpl="rel-baike"] .c-span2 ' +
         '{ flex: 0 0 60px !important; width: 60px !important; ' +
         'max-width: 60px !important; margin: 0 12px 0 0 !important; ' +
         'float: none !important; }' +
-
         'body.double-column .lemma-item_1MZZu .c-span10, ' +
         'body.double-column div[tpl="rel-baike"] .c-span10 ' +
         '{ flex: 1 !important; width: auto !important; ' +
         'min-width: 0 !important; float: none !important; }' +
 
-        // =========================================================================
-        // 🔥🔥🔥 百科卡片50%宽度强制修复（最高优先级）
-        // =========================================================================
+
+        // 百科卡片50%宽度强制修复
         'body.double-column #content_left > .result-op[tpl="rel-baike"], ' +
         'body.double-column #content_left > div[tpl="rel-baike"], ' +
         'body.double-column #content_left > .c-container[tpl="rel-baike"], ' +
@@ -570,7 +671,6 @@
 
         // 响应式：小屏幕自动单列
         '@media (max-width: 1200px) { body.double-column #container.sam_newgrid, body.double-column #content_left { grid-template-columns: 1fr !important; } body.double-column .c-container, body.double-column .result-op, body.double-column .result { max-height: none !important; min-height: auto !important; } }' +
-
         '.c-container:hover, .result-op:hover, .result:hover { box-shadow: 0 6px 15px rgba(0,0,0,0.12) !important; transform: translateY(-3px) !important; }' +
         '#wrapper_wrapper, #container { max-width: 100% !important; padding: 0 !important; box-sizing: border-box !important; }' +
         '#content_right, #con-ar { display: none !important; }' +
@@ -582,29 +682,29 @@
         'body.double-column #rs, body.double-column #page { max-width: 1400px !important; margin: 20px auto !important; padding: 0 20px !important; box-sizing: border-box !important; }' +
         'body.double-column #rs > div, body.double-column #page > div { margin-left: 0 !important; margin-right: auto !important; }' +
 
-        // ==========================================================================
+        // ==============================================
         // 针对双列模式下"内容过窄"的精准修复
-        // ==========================================================================
+        // ==============================================
 
-        // 1. 强制 c-span24 (通用的全宽容器) 占满 100%，修复窄内容
+        // 强制 c-span24 (通用的全宽容器) 占满 100%，修复窄内容
         'body.double-column .c-span24 { width: 100% !important; max-width: 100% !important; float: none !important; }' +
 
-        // 2. 修复贴吧/表格类卡片的宽度
+        //  修复贴吧/表格类卡片的宽度
         'body.double-column div[tpl="tieba_general"] .c-row { width: 100% !important; }' +
         'body.double-column div[tpl="tieba_general"] .c-span18 { width: 100% !important; max-width: none !important; }' +
         'body.double-column .op_tieba_general_main { width: 100% !important; }' +
 
-        // 3. 修复软件下载/列表类卡片 (op_exactqa 等)
+        //  修复软件下载/列表类卡片 (op_exactqa 等)
         'body.double-column .op_exactqa_main, body.double-column .op_exactqa_body { width: 100% !important; }' +
 
-        // 4. 确保表格占满
+        //  确保表格占满
         'body.double-column table { width: 100% !important; display: table !important; }' +
 
-        // 5. 确保顶层 div 撑开
+        //  确保顶层 div 撑开
         'body.double-column .c-container > div, body.double-column .result-op > div { width: 100% !important; }' +
         'body.double-column .op-soft-title, body.double-column .op_soft_title { max-width: 100% !important; }' +
 
-        // 6. 修复 Gitee/开源项目卡片内容过窄的问题
+        // 修复 Gitee/开源项目卡片内容过窄的问题
         'body.double-column [class*="open-source-software-blog-card"] section, ' +
         'body.double-column [class*="open-source-software-blog-card"] .blog-list-container, ' +
         'body.double-column [class*="open-source-software-blog-card"] .c-row { width: 100% !important; max-width: 100% !important; display: flex !important; }' +
@@ -613,42 +713,42 @@
         // ==========================================================================
         // 修复百科卡片布局：图片左、文字右、底部按钮不重叠
         // ==========================================================================
-
-        // 8. 父容器使用flex横向布局
+        // 父容器使用flex横向布局
         '.pc-fresh-wrapper-con .new-pmd .c-row.card-normal_3X7DX, .bk_polysemy_1Ef6j .c-row.card-normal_3X7DX { display: flex !important; flex-direction: row !important; align-items: flex-start !important; gap: 15px !important; flex-wrap: nowrap !important; }' +
 
-        // 9. 左侧图片容器固定宽度
+        //  左侧图片容器固定宽度
         '.pc-fresh-wrapper-con .new-pmd .c-span3.left-image_3TJlK, .bk_polysemy_1Ef6j .c-span3.left-image_3TJlK { flex: 0 0 120px !important; width: 120px !important; max-width: 120px !important; }' +
 
-        // 10. 右侧内容自动填充
+        //  右侧内容自动填充
         '.pc-fresh-wrapper-con .new-pmd .c-span9.main-info_4Q_kj, .bk_polysemy_1Ef6j .c-span9.main-info_4Q_kj { flex: 1 !important; min-width: 0 !important; display: flex !important; flex-direction: column !important; }' +
 
-        // ==========================================================================
+        // ==============================================
         // 修复底部来源区域、播报/暂停、菜单栏对齐问题
-        // ==========================================================================
-        // 11. 底部来源容器 - 强制单行、不换行、子元素垂直居中
+        // ==============================================
+        //  底部来源容器 - 强制单行、不换行、子元素垂直居中
         '.pc-fresh-wrapper-con .source_1Vdff, .bk_polysemy_1Ef6j .source_1Vdff { display: flex !important; flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; justify-content: flex-start !important; width: 100% !important; white-space: nowrap !important; margin-top: 10px !important; }' +
 
-        // 12. 底部链接/来源图标 - 防止压缩
+        //  底部链接/来源图标 - 防止压缩
         '.pc-fresh-wrapper-con .siteLink_9TPP3, .bk_polysemy_1Ef6j .siteLink_9TPP3 { flex-shrink: 0 !important; margin-right: 15px !important; display: flex !important; align-items: center !important; }' +
 
-        // 13. 播报/暂停组件容器 - 强制横向排列 (flex-direction: row)，不换行
+        //  播报/暂停组件容器 - 强制横向排列 (flex-direction: row)，不换行
         '.pc-fresh-wrapper-con .tts-wrapper_1Lt-9, .bk_polysemy_1Ef6j .tts-wrapper_1Lt-9, div[class*="tts-wrapper"] { display: flex !important; flex-direction: row !important; align-items: center !important; margin-right: auto !important; flex-shrink: 0 !important; }' +
 
-        // 14. 具体的播报/暂停按钮 - 强制横向内联
+        // 具体的播报/暂停按钮 - 强制横向内联
         'div[class*="tts-wrapper"] > div, div[class*="tts-wrapper"] .voice-btn { display: inline-flex !important; align-items: center !important; margin-right: 10px !important; }' +
 
-        // 15. 右侧工具栏（举报/菜单箭头） - 强制推到最右侧
+        //  右侧工具栏（举报/菜单箭头） - 强制推到最右侧
         '.pc-fresh-wrapper-con .c-tools, .bk_polysemy_1Ef6j .c-tools { margin-left: auto !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; position: static !important; }' +
 
-        // 16. 双列模式下视频包装器样式优化
+        //  双列模式下视频包装器样式优化
         'body.double-column .bk_polysemy_1Ef6j .video-wrapper_MQNVE { width: 10% !important; height: 16px !important; margin-bottom: 8px !important; position: relative !important; border: 1px solid rgba(0, 0, 0, 0.05) !important; border-radius: 12px !important; overflow: hidden !important; -webkit-mask-image: -webkit-radial-gradient(white, black) !important; }' +
 
         // ==========================================================================
         // 修复百科图片变成巨大正方形的问题
         // ==========================================================================
-        // 覆盖百度原生的 padding-bottom: 100% 规则，取消正方形强制比例，改为10%
+        // 覆盖百度原生的 padding-bottom: 100% 规则，取消正方形强制比例
         'body.double-column .pc-fresh-wrapper-con .new-pmd .c-img-s { padding-bottom: 10% !important; }' +
+
         // 限制图片最大高度，防止撑破容器
         'body.double-column .pc-fresh-wrapper-con .new-pmd .c-img img { width: 100% !important; }' +
 
@@ -658,30 +758,31 @@
         // ==========================================================================
         // 针对多层嵌套的来源图标，强制所有子级为16px
         // ==========================================================================
-        // 1. 锁定最外层容器及其所有后代元素的大小
+        // 锁定最外层容器及其所有后代元素的大小
+
         'body.double-column div[class*="site-img"], body.double-column div[class*="site-img"] * { width: 16px !important; height: 16px !important; max-width: 16px !important; min-width: 16px !important; flex: 0 0 16px !important; box-sizing: border-box !important; }' +
 
-        // 2. 单独处理容器的边距和溢出，防止切断
+        // 单独处理容器的边距和溢出，防止切断
         'body.double-column div[class*="site-img"] { margin-right: 6px !important; overflow: hidden !important; display: flex !important; align-items: center !important; }' +
 
-        // 3. 强制图片适应容器
+        // 强制图片适应容器
         'body.double-column div[class*="site-img"] img { object-fit: contain !important; display: block !important; border: none !important; }' +
 
-        // 4. 针对 c-img-s 类的补充修复 (以防没有 site-img 包裹的情况)
+        // 针对 c-img-s 类的补充修复 (以防没有 site-img 包裹的情况)
         'body.double-column .c-img-s, body.double-column .c-img-s * { width: 16px !important; height: 16px !important; max-width: 16px !important; }' +
 
-        // 5. 确保链接容器横向排列
+        // 确保链接容器横向排列
         'body.double-column a[class*="siteLink"] { display: flex !important; align-items: center !important; text-decoration: none !important; }' +
 
         // ==========================================================================
         // 百科卡片图片显示修复（精确选择器，避免影响底部来源图标）
         // ==========================================================================
 
-        // 1. 覆盖百度原生的 padding-bottom 规则（只针对顶部图片区域）
+        //  覆盖百度原生的 padding-bottom 规则（只针对顶部图片区域）
         'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s { padding-bottom: 0 !important; }' +
         'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s { padding-bottom: 0 !important; }' +
 
-        // 2. 百科左侧缩略图（c-img-s in c-span3）- 强制 120px x 100px
+        //  百科左侧缩略图（c-img-s in c-span3）- 强制 120px x 100px
         'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s { width: 120px !important; height: 100px !important; min-width: 120px !important; max-width: 120px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: left !important; margin-right: 15px !important; }' +
         'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s { width: 120px !important; height: 100px !important; min-width: 120px !important; max-width: 120px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: left !important; margin-right: 15px !important; }' +
         '.pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s { width: 120px !important; height: 100px !important; min-width: 120px !important; max-width: 120px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: left !important; margin-right: 15px !important; }' +
@@ -690,7 +791,7 @@
         'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s img { width: 100% !important; height: 100% !important; max-width: 120px !important; max-height: 100px !important; object-fit: cover !important; display: block !important; position: static !important; }' +
         '.pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 .c-img-s img { width: 100% !important; height: 100% !important; max-width: 120px !important; max-height: 100px !important; object-fit: cover !important; display: block !important; position: static !important; }' +
 
-        // 3. 百科右侧大图（c-img3 in c-span9）- 强制 140px x 100px
+        // 百科右侧大图（c-img3 in c-span9）- 强制 140px x 100px
         'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span9 .c-img3 { width: 140px !important; height: 100px !important; min-width: 140px !important; max-width: 140px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: right !important; margin-left: 15px !important; }' +
         'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span9 .c-img3 { width: 140px !important; height: 100px !important; min-width: 140px !important; max-width: 140px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: right !important; margin-left: 15px !important; }' +
         '.pc-fresh-wrapper-con .new-pmd .c-row > .c-span9 .c-img3 { width: 140px !important; height: 100px !important; min-width: 140px !important; max-width: 140px !important; min-height: 100px !important; max-height: 100px !important; padding: 0 !important; overflow: hidden !important; flex-shrink: 0 !important; display: block !important; float: right !important; margin-left: 15px !important; }' +
@@ -699,25 +800,25 @@
         'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span9 .c-img3 img { width: 100% !important; height: 100% !important; max-width: 140px !important; max-height: 100px !important; object-fit: cover !important; display: block !important; position: static !important; }' +
         '.pc-fresh-wrapper-con .new-pmd .c-row > .c-span9 .c-img3 img { width: 100% !important; height: 100% !important; max-width: 140px !important; max-height: 100px !important; object-fit: cover !important; display: block !important; position: static !important; }' +
 
-        // 4. 修复百科卡片布局，防止文字重叠
+        // 修复百科卡片布局，防止文字重叠
         'body.double-column .pc-fresh-wrapper-con .new-pmd .c-span3 { width: auto !important; min-height: 110px !important; overflow: visible !important; margin-bottom: 15px !important; }' +
         'body.double-column .pc-fresh-wrapper-con .new-pmd .c-span9 { width: auto !important; min-height: 110px !important; overflow: visible !important; clear: none !important; }' +
         'body.single-column .pc-fresh-wrapper-con .new-pmd .c-span3 { width: auto !important; min-height: 110px !important; overflow: visible !important; margin-bottom: 15px !important; }' +
         'body.single-column .pc-fresh-wrapper-con .new-pmd .c-span9 { width: auto !important; min-height: 110px !important; overflow: visible !important; clear: none !important; }' +
 
-        // 5. 确保文字内容有足够空间不重叠（给顶部区域留空间）
+        // 确保文字内容有足够空间不重叠（给顶部区域留空间）
         'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 > .c-span-last { display: block !important; margin-left: 135px !important; min-height: 100px !important; }' +
         'body.double-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span9.main-info_4Q_kj { display: block !important; min-height: 100px !important; }' +
         'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span3 > .c-span-last { display: block !important; margin-left: 135px !important; min-height: 100px !important; }' +
         'body.single-column .pc-fresh-wrapper-con .new-pmd .c-row > .c-span9.main-info_4Q_kj { display: block !important; min-height: 100px !important; }' +
 
 
-        // 6. 确保底部来源图标保持16x16（明确排除site-img区域的c-img-s）
+        // 确保底部来源图标保持16x16（明确排除site-img区域的c-img-s）
         'body.double-column .pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s, body.double-column .pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s * { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; min-width: 16px !important; min-height: 16px !important; padding: 0 !important; margin: 0 !important; }' +
         'body.single-column .pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s, body.single-column .pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s * { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; min-width: 16px !important; min-height: 16px !important; padding: 0 !important; margin: 0 !important; }' +
         '.pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s, .pc-fresh-wrapper-con .source_1Vdff .site-img_aJqZX .c-img-s * { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; min-width: 16px !important; min-height: 16px !important; padding: 0 !important; margin: 0 !important; }' +
 
-        // 7. 通用：所有非百科区域的16x16来源图标
+        // 通用：所有非百科区域的16x16来源图标
         'body.double-column .c-container:not(.pc-fresh-wrapper-con):not(.pc-fresh-wrapper-ext) div[class*="site-img"] .c-img-s { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; min-width: 16px !important; min-height: 16px !important; }' +
         'body.double-column .c-container:not(.pc-fresh-wrapper-con):not(.pc-fresh-wrapper-ext) div[class*="site-img"] .c-img-s img { width: 16px !important; height: 16px !important; max-width: 16px !important; max-height: 16px !important; }' +
 
@@ -726,7 +827,7 @@
         // 百科/关联卡片图片“长条化”彻底矫正
         // ==========================================================================
 
-        // 1. 锁定 lemma-item 容器，强制使用 Flex 布局并允许内容撑开高度
+        // 锁定 lemma-item 容器，强制使用 Flex 布局并允许内容撑开高度
         'div[tpl="rel-baike"] .lemma-item_1MZZu, .rel-baike_2iWln .lemma-item_1MZZu { ' +
         '    display: flex !important; ' +
         '    flex-direction: row !important; ' +
@@ -736,7 +837,7 @@
         '    padding: 12px 0 !important; ' +
         '}' +
 
-        // 2. 彻底重置左侧图片包装层 (c-span2)，干掉所有浮动和百分比限制
+        // 彻底重置左侧图片包装层 (c-span2)，干掉所有浮动和百分比限制
         'div[tpl="rel-baike"] .c-span2, .rel-baike_2iWln .c-span2 { ' +
         '    width: 66px !important; ' +
         '    flex: 0 0 66px !important; ' +
@@ -745,7 +846,7 @@
         '    float: none !important; ' +
         '}' +
 
-        // 3. 核心：强制重置百度用来占位的容器，解决“扁条”现象
+        // 核心：强制重置百度用来占位的容器，解决“扁条”现象
         // 我们必须给它一个固定的宽高，并取消 padding-bottom: 100% 之类的设置
         'div[tpl="rel-baike"] .c-img, div[tpl="rel-baike"] .image-wrapper_39wYE, .rel-baike_2iWln .c-img { ' +
         '    width: 60px !important; ' +
@@ -756,7 +857,7 @@
         '    overflow: hidden !important; ' +
         '}' +
 
-        // 4. 图片本身：取消绝对定位，改用正常的缩放模式
+        // 图片本身：取消绝对定位，改用正常的缩放模式
         'div[tpl="rel-baike"] .c-img img, .rel-baike_2iWln .c-img img { ' +
         '    position: static !important; ' + // 极其重要：取消 absolute，防止它飘走
         '    width: 100% !important; ' +
@@ -767,7 +868,7 @@
         '    border-radius: 8px !important; ' +
         '}' +
 
-        // 5. 右侧文字区域：强制占据剩余所有空间，防止重叠
+        // 右侧文字区域：强制占据剩余所有空间，防止重叠
         'div[tpl="rel-baike"] .c-span10, .rel-baike_2iWln .c-span10 { ' +
         '    flex: 1 !important; ' +
         '    width: auto !important; ' +
@@ -776,7 +877,7 @@
         '    padding: 0 !important; ' +
         '}' +
 
-        // 6. 深色模式修正：去掉图片后面难看的白色底块
+        // 深色模式修正：去掉图片后面难看的白色底块
         'body.dark-mode .rel-baike_2iWln .c-img, ' +
         'body.dark-mode .rel-baike_2iWln .c-img-border { ' +
         '    background: transparent !important; ' +
@@ -786,19 +887,19 @@
         // ==========================================================================
         // 修复置顶结果被遮挡的问题
         // ==========================================================================
-        // 8. 给第一条结果（置顶的官方结果）增加底部 padding，腾出空间放蓝色标签，防止遮挡文字
+        // 给第一条结果（置顶的官方结果）增加底部 padding，腾出空间放蓝色标签，防止遮挡文字
         '#content_left > .c-container:first-child, #content_left > .result:first-child, #content_left > .result-op:first-child { position: relative !important; padding-bottom: 35px !important; }' +
 
         // ==========================================================================
         // 修复百科/知识图谱卡片重叠 & 底部按钮对齐
         // ==========================================================================
-        // 1. 强制取消 Flex 和高度限制，解决文字挤压，让卡片自然撑开
+        // 强制取消 Flex 和高度限制，解决文字挤压，让卡片自然撑开
         '.c-container[tpl="baike"], .c-container[tpl="kg_entity_card"], .c-container.pc-fresh-wrapper-con, .c-container.c-group-wrapper { display: block !important; height: auto !important; max-height: none !important; width: 50% !important; max-width: 100% !important; flex: 0 0 100% !important; overflow: visible !important; }' +
 
-        // 2. 强制底部来源栏沉底，拉开距离，并强制横向排列 (关键：display: flex 让按钮在一行)
+        // 强制底部来源栏沉底，拉开距离，并强制横向排列 (关键：display: flex 让按钮在一行)
         '.pc-fresh-wrapper-con .source_1Vdff, .c-group-wrapper .source_1Vdff { position: relative !important; clear: both !important; margin-top: 15px !important; padding-top: 10px !important; display: flex !important; align-items: center !important; flex-wrap: nowrap !important; width: 50% !important; height: auto !important; }' +
 
-        // 3. 强制清除浮动，防止文字内容溢出覆盖底部
+        // 强制清除浮动，防止文字内容溢出覆盖底部
         '.c-container[tpl="baike"]::after, .pc-fresh-wrapper-con::after { content: " " !important; display: table !important; clear: both !important; }';
 
     // ==============================================
@@ -824,10 +925,10 @@
             // ==============================================
             if (window.location.pathname === '/' || (window.location.pathname === '/index.php' && !window.location.search.includes('wd'))) {
                 const homepageStyles =
-                    // 1. 隐藏多余元素
+                    // 隐藏多余元素
                     '#form, #s_form, .s_btn_wr, .s_ipt_wr, .fm, .ai-input, .s-center-box, #s_new_search_guide, #bottom_layer, #bottom_space, #s_popup_advert, .popup-advert, .advert-shrink { display: none !important; }' +
 
-                    // 2. Logo 向上大幅度移动
+                    // Logo 向上大幅度移动
                     '#lg { ' +
                     '    display: flex !important; ' +
                     '    justify-content: center !important; ' +
@@ -840,7 +941,7 @@
                     '    position: relative !important; ' +
                     '}' +
 
-                    // 3. 修复 Logo 图片在浅色模式下的反色问题
+                    // 修复 Logo 图片在浅色模式下的反色问题
                     '#lg img { ' +
                     '    filter: none !important; ' +
                     '    width: 270px !important; ' +
@@ -848,7 +949,7 @@
                     '}' +
                     'body.dark-mode #lg img { filter: invert(0.9) hue-rotate(180deg) !important; }' +
 
-                    // 4. 搜索框紧贴 Logo
+                    //  搜索框紧贴 Logo
                     '.gm-search-container { ' +
                     '    position: relative !important; ' +
                     '    top: 0px !important; ' + // 向上微调搜索框，使其靠近 Logo
@@ -878,6 +979,8 @@
                     // 强力去除 EC_result, data-placeid, 底部推荐词 等商业推广广告
                     '.EC_result, .ec_result, [data-tuiguang], [data-ecimtimesign], [data-placeid], [data-cmatchid], .ec-tuiguang, .c-recomm-wrap, ' +
                     '#content_left > div[style*="display:block !important"], #content_left > div[data-ec-ad-type], #s_popup_advert { display: none !important; }' +
+
+
                     // 强力屏蔽：底部弹出及右下角悬浮缩放广告
                     '#s_popup_advert, .popup-advert, .advert-shrink, .advert-shrink2, #s_popup_advert * { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; position: fixed !important; top: -9999px !important; left: -9999px !important; z-index: -999999 !important; clip: rect(0 0 0 0) !important; }' +
 
@@ -894,8 +997,9 @@
                     '#s_tab { width: 100% !important; padding-left: 0 !important; display: flex !important; justify-content: center !important; background: transparent !important; }' +
                     '#s_tab_inner { display: flex !important; align-items: center !important; justify-content: center !important; width: auto !important; float: none !important; }' +
                     '#s_tab .s-tab-item { display: inline-flex !important; align-items: center !important; float: none !important; margin: 0 10px !important; vertical-align: middle !important; }' +
+
                     // 限制浅色模式下导航栏图片的尺寸 (修复AI图标过大问题)
-                    '#s_tab .s-tab-item img { height: 18px !important; width: auto !important; margin-right: 5px !important; vertical-align: text-bottom !important; object-fit: contain !important; }' +
+                    '#s_tab .s-tab-item img { height: 16px !important; width: auto !important; margin-right: 5px !important; vertical-align: text-bottom !important; object-fit: contain !important; }' +
 
                     // 修复下方筛选标签栏
                     '.tag-container_ksKXH, .wrapper_l .tag-wrapper_1sGop { width: 100% !important; margin: 10px auto !important; position: relative !important; display: flex !important; justify-content: center !important; top: unset !important; bottom: unset !important; float: none !important; }' +
@@ -1137,6 +1241,8 @@
                     'body.dark-mode .c-group-wrapper, body.dark-mode div[tpl*="baike"] { background-color: #252525 !important; border: 1px solid #333 !important; }' +
                     'body.dark-mode .c-group-wrapper ._bg-header_1ml43_46, body.dark-mode ._bg-header_1ml43_46, body.dark-mode .c-group-wrapper .content_309tE, body.dark-mode .c-group-wrapper ._content_1ml43_4 { background-color: #252525 !important; }' +
                     '.pc-fresh-smooth .c-group-wrapper::after, .pc-fresh-smooth .new-pmd .c-border::after { display: none !important; }' +
+                    '.bk_polysemy_1Ef6j .left-image_3TJlK .video-poster_3md57 .video-logo_2HJcT { position: absolute !important; left: 0 !important; bottom: -100px !important; }' +
+                    '.image-wrapper_39wYE .mid-icon_1HhCn { position: absolute !important; left: 50% !important; top: 50% !important; margin-left: -20px !important; margin-top: 25px !important; z-index: 2 !important; color: #fff !important; text-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15) !important; }' +
 
                     // 其他组件
                     'body.dark-mode .scroll-box_2RZdL .tips_33agN { color: #e8e6e3 !important; }' +
@@ -1173,13 +1279,13 @@
                     // =========================================================================
                     // 修复百科/知识图谱卡片重叠 & 底部按钮对齐
                     // =========================================================================
-                    // 1. 强制取消 Flex 和高度限制，解决文字挤压，让卡片自然撑开
+                    // 强制取消 Flex 和高度限制，解决文字挤压，让卡片自然撑开
                     '.c-container[tpl="baike"], .c-container[tpl="kg_entity_card"], .c-container.pc-fresh-wrapper-con, .c-container.c-group-wrapper { display: block !important; height: auto !important; max-height: none !important; width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; overflow: visible !important; }' +
 
-                    // 2. 强制底部来源栏沉底，拉开距离，并强制横向排列 (关键：display: flex 让按钮在一行)
+                    // 强制底部来源栏沉底，拉开距离，并强制横向排列 (关键：display: flex 让按钮在一行)
                     '.pc-fresh-wrapper-con .source_1Vdff, .c-group-wrapper .source_1Vdff { position: relative !important; clear: both !important; margin-top: 15px !important; padding-top: 10px !important; display: flex !important; align-items: center !important; flex-wrap: nowrap !important; width: 100% !important; height: auto !important; }' +
 
-                    // 3. 强制清除浮动，防止文字内容溢出覆盖底部
+                    // 强制清除浮动，防止文字内容溢出覆盖底部
                     '.c-container[tpl="baike"]::after, .pc-fresh-wrapper-con::after { content: " " !important; display: table !important; clear: both !important; }';
 
                 GM_addStyle(commonStyles + resultsPageStyles);
