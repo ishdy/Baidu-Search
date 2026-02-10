@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
-// @version      1.61
+// @version      1.62
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc (Enhanced)
@@ -14,7 +14,10 @@
 // @grant        GM_getValue
 // @grant        GM_xmlhttpRequest
 // @run-at       document-start
-// @connect      *
+// @connect      baidu.com
+// @connect      www.baidu.com
+// @connect      m.baidu.com
+// @connect      xueshu.baidu.com
 // @license      MIT
 // @downloadURL https://update.greasyfork.org/scripts/543000/%E7%99%BE%E5%BA%A6%E5%85%A8%E9%A1%B5%E9%9D%A2%E6%A0%B7%E5%BC%8F%E4%BC%98%E5%8C%96-%E5%8E%BB%E5%B9%BF%E5%91%8A%EF%BC%8C%E6%B7%B1%E8%89%B2%E6%A8%A1%E5%BC%8F.user.js
 // @updateURL https://update.greasyfork.org/scripts/543000/%E7%99%BE%E5%BA%A6%E5%85%A8%E9%A1%B5%E9%9D%A2%E6%A0%B7%E5%BC%8F%E4%BC%98%E5%8C%96-%E5%8E%BB%E5%B9%BF%E5%91%8A%EF%BC%8C%E6%B7%B1%E8%89%B2%E6%A8%A1%E5%BC%8F.meta.js
