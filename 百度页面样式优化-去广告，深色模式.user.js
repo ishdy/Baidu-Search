@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
-// @version      1.62
+// @version      1.63
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc (Enhanced)
@@ -34,41 +34,95 @@
     hideStyle.textContent = '.search-quit-dialog-wrap, ._2lMH_ { display: none !important; opacity: 0 !important; }';
     (document.head || document.documentElement).appendChild(hideStyle);
 
-    //  实时拦截（2ms）
-    setInterval(() => {
-        document.querySelectorAll('*').forEach(el => {
-            const style = window.getComputedStyle(el);
+    //  平衡版遮罩拦截（加载时+点击时+前10秒轻量检查）
+    function blockOverlays() {
+        const allElements = document.querySelectorAll('*');
+        let blockedCount = 0;
+
+        allElements.forEach(el => {
             if (
-                el.id !== 'gm-loading' &&
-                el.id !== 'settings-panel' &&
-                el.id !== 'settings-toggle' &&
-                el.id !== 'back-to-top' &&
-                !el.id.includes('gm-') &&
+                el.id === 'gm-loading' ||
+                el.id === 'settings-panel' ||
+                el.id === 'settings-toggle' ||
+                el.id === 'back-to-top' ||
+                el.id?.includes('gm-')
+            ) {
+                return;
+            }
+
+            const style = window.getComputedStyle(el);
+
+            if (
                 (style.position === 'fixed' || style.position === 'absolute') &&
                 parseInt(style.zIndex) > 100 &&
                 el.offsetWidth > window.innerWidth * 0.75 &&
                 el.offsetHeight > window.innerHeight * 0.75 &&
-                (style.backgroundColor.includes('rgba') || parseFloat(style.opacity) < 1 || style.backdropFilter !== 'none')
+                (style.backgroundColor.includes('rgba') ||
+                 parseFloat(style.opacity) < 1 ||
+                 style.backdropFilter !== 'none' ||
+                 el.classList.contains('search-quit-dialog-wrap') ||
+                 el.classList.contains('_2lMH_'))
             ) {
                 el.style.cssText = 'display: none !important; visibility: hidden !important;';
+                blockedCount++;
             }
         });
-    }, 2);
 
-    //  MutationObserver即时删除
+        if (blockedCount > 0) console.log('[遮罩拦截] 已拦截', blockedCount, '个遮罩');
+    }
+
+    // 1. 页面加载时检查
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', blockOverlays);
+    } else {
+        blockOverlays();
+    }
+
+    window.addEventListener('load', () => {
+        setTimeout(blockOverlays, 500);
+        setTimeout(blockOverlays, 2000);
+    });
+
+    // 2. 点击筛选按钮时检查
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.tag-item_3Z1mA, .tag-common_8ztfL, [class*="tag-"]')) {
+            setTimeout(blockOverlays, 100);
+            setTimeout(blockOverlays, 500);
+        }
+    }, true);
+
+    // 3. 前10秒轻量级定时检查（从2ms优化到1秒，降低500倍频率）
+    let checkCount = 0;
+    const maxChecks = 10; // 只检查10次（10秒）
+    const intervalId = setInterval(() => {
+        checkCount++;
+        blockOverlays();
+
+        if (checkCount >= maxChecks) {
+            clearInterval(intervalId);
+            console.log('[遮罩拦截] 定时检查已停止（10秒后）');
+        }
+    }, 1000); // 1秒检查一次
+
+    //  MutationObserver即时删除（优化版：防抖）
+    let mutationTimeout = null;
     new MutationObserver(mutations => {
-        mutations.forEach(m => {
-            m.addedNodes.forEach(node => {
-                if (node.nodeType === 1 && (
-                    node.classList?.contains('search-quit-dialog-wrap') ||
-                    node.classList?.contains('_2lMH_')
-                )) {
-                    node.remove();
-                    console.log('[遮罩拦截] 已删除:', node.className || node.id);
-                }
+        if (mutationTimeout) return;
+        mutationTimeout = setTimeout(() => {
+            mutations.forEach(m => {
+                m.addedNodes.forEach(node => {
+                    if (node.nodeType === 1 && (
+                        node.classList?.contains('search-quit-dialog-wrap') ||
+                        node.classList?.contains('_2lMH_')
+                    )) {
+                        node.remove();
+                        console.log('[遮罩拦截] MutationObserver已删除:', node.className || node.id);
+                    }
+                });
             });
-        });
-    }).observe(document.documentElement, { childList: true, subtree: true });
+            mutationTimeout = null;
+        }, 50);
+    }).observe(document.documentElement, { childList: true, subtree: false });
 
     //  点击筛选按钮时显示加载动画（纯净版 - 无背景）
     document.addEventListener('click', function(e) {
@@ -279,7 +333,9 @@
                 }
             }
 
-            if (request) request.abort();
+            if (request && typeof request.abort === 'function') {
+                request.abort();
+            }
         } catch (e) {
             console.error('处理重定向失败', e);
         }
