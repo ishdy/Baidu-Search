@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
-// @version      1.63
+// @version      1.64
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc (Enhanced)
@@ -953,10 +953,10 @@
         // 修复百科/知识图谱卡片重叠 & 底部按钮对齐
         // ==========================================================================
         // 强制取消 Flex 和高度限制，解决文字挤压，让卡片自然撑开
-        '.c-container[tpl="baike"], .c-container[tpl="kg_entity_card"], .c-container.pc-fresh-wrapper-con, .c-container.c-group-wrapper { display: block !important; height: auto !important; max-height: none !important; width: 50% !important; max-width: 100% !important; flex: 0 0 100% !important; overflow: visible !important; }' +
+        '.c-container[tpl="baike"], .c-container[tpl="kg_entity_card"], .c-container.pc-fresh-wrapper-con, .c-container.c-group-wrapper { display: block !important; height: auto !important; max-height: none !important; width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; overflow: visible !important; }' +
 
         // 强制底部来源栏沉底，拉开距离，并强制横向排列 (关键：display: flex 让按钮在一行)
-        '.pc-fresh-wrapper-con .source_1Vdff, .c-group-wrapper .source_1Vdff { position: relative !important; clear: both !important; margin-top: 15px !important; padding-top: 10px !important; display: flex !important; align-items: center !important; flex-wrap: nowrap !important; width: 50% !important; height: auto !important; }' +
+        '.pc-fresh-wrapper-con .source_1Vdff, .c-group-wrapper .source_1Vdff { position: relative !important; clear: both !important; margin-top: 15px !important; padding-top: 10px !important; display: flex !important; align-items: center !important; flex-wrap: nowrap !important; width: 100% !important; height: auto !important; }' +
 
         // 强制清除浮动，防止文字内容溢出覆盖底部
         '.c-container[tpl="baike"]::after, .pc-fresh-wrapper-con::after { content: " " !important; display: table !important; clear: both !important; }';
@@ -1182,6 +1182,7 @@
                     'body.dark-mode .words-text_5Ps7D, body.dark-mode .words-text_5Ps7D span, body.dark-mode .cos-search-link-text, body.dark-mode .cos-icon-research, body.dark-mode .cos-more-link-text, body.dark-mode .cos-tabs-header .cos-tab, body.dark-mode .detail-underline_7dWH2, body.dark-mode .detail-icon_3mni6 i { color: #8ab4f8 !important; text-shadow: 0 0 2px rgba(0,0,0,0.5) !important; }' +
                     'body.dark-mode .common-text_2R17p.cos-font-medium, body.dark-mode object.cos-line-clamp-2 .mean-text_4MwRe { color: #e8e6e3 !important; text-shadow: 0 0 2px rgba(0,0,0,0.5) !important; }' +
 
+
                     // 标签和按钮
                     'body.dark-mode .tabContainer_4bRe9 { background: transparent !important; border-bottom: 1px solid #444 !important; }' +
                     'body.dark-mode .tabItem_14YyZ span, body.dark-mode .tabItem_14YyZ .cos-icon { color: #999 !important; }' +
@@ -1301,7 +1302,26 @@
                     'body.dark-mode .c-group-wrapper ._bg-header_1ml43_46, body.dark-mode ._bg-header_1ml43_46, body.dark-mode .c-group-wrapper .content_309tE, body.dark-mode .c-group-wrapper ._content_1ml43_4 { background-color: #252525 !important; }' +
                     '.pc-fresh-smooth .c-group-wrapper::after, .pc-fresh-smooth .new-pmd .c-border::after { display: none !important; }' +
                     '.bk_polysemy_1Ef6j .left-image_3TJlK .video-poster_3md57 .video-logo_2HJcT { position: absolute !important; left: 0 !important; bottom: -100px !important; }' +
-                    '.image-wrapper_39wYE .mid-icon_1HhCn { position: absolute !important; left: 50% !important; top: 50% !important; margin-left: -20px !important; margin-top: 25px !important; z-index: 2 !important; color: #fff !important; text-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15) !important; }' +
+
+
+                    // ==========================================
+                    // ⚡把所有播放按钮在图片正中心
+                    // ==========================================
+                    // 1. 修复父容器高度塌陷，让其紧紧包裹住图片
+                    '.image-wrapper_39wYE, .video-poster_3md57 { position: relative !important; display: inline-block !important; }' +
+                    '.image-wrapper_39wYE .c-img, .video-poster_3md57 .c-img { float: none !important; margin: 0 !important; display: block !important; }' +
+                    // ==========================================
+                    // ⚡ 修复双列模式下“日历组件”被强行截断的问题
+                    // ==========================================
+                    'body.double-column .c-container[tpl*="calendar"], ' +
+                    'body.double-column .result-op[tpl*="calendar"], ' +
+                    'body.double-column div[tpl*="calendar"] { ' +
+                    'max-height: none !important; ' +        /* 彻底解除 380px 的高度限制 */
+                    'height: auto !important; ' +            /* 让日历根据自身内容撑开高度 */
+                    'overflow: visible !important; ' +       /* 防止内部的下拉菜单或阴影被切掉 */
+                    'padding-bottom: 20px !important; ' +    /* 底部留出呼吸空间 */
+                    '}';
+
 
                     // 其他组件
                     'body.dark-mode .scroll-box_2RZdL .tips_33agN { color: #e8e6e3 !important; }' +
@@ -1345,7 +1365,66 @@
                     '.pc-fresh-wrapper-con .source_1Vdff, .c-group-wrapper .source_1Vdff { position: relative !important; clear: both !important; margin-top: 15px !important; padding-top: 10px !important; display: flex !important; align-items: center !important; flex-wrap: nowrap !important; width: 100% !important; height: auto !important; }' +
 
                     // 强制清除浮动，防止文字内容溢出覆盖底部
-                    '.c-container[tpl="baike"]::after, .pc-fresh-wrapper-con::after { content: " " !important; display: table !important; clear: both !important; }';
+                    '.c-container[tpl="baike"]::after, .pc-fresh-wrapper-con::after { content: " " !important; display: table !important; clear: both !important; }' +
+
+                    // ==========================================
+                    // ⚡ 百度热搜榜终极补丁 (全模式横向平滑滚动，彻底防截断)
+                    // ==========================================
+                    // 1. 彻底击碎百度的 min-width 限制
+                    'body.pc-fresh-wrapper-con .c-pc-toppic-card, body .c-pc-toppic-card, body .boiling-all_29kBD { min-width: 0 !important; min-width: unset !important; }' +
+
+                    // 2. 根容器自适应重置
+                    '.gm-hot-search { position: relative !important; height: auto !important; max-height: none !important; box-sizing: border-box !important; overflow: hidden !important; border-radius: 12px !important; padding: 0 !important; min-width: 0 !important; }' +
+                    '.gm-hot-search .bg-wrapper_2Yb28 { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; z-index: 0 !important; }' +
+                    '.gm-hot-search .bg-wrapper_2Yb28 img { width: 100% !important; height: 100% !important; object-fit: cover !important; }' +
+
+                    // 3. 重置内部包裹层，干掉 top: 97px
+                    '.gm-hot-search .boiling-wrapper_fhywn, .boiling-all_29kBD .boiling-wrapper_fhywn { position: relative !important; top: 0 !important; height: auto !important; max-height: none !important; width: 100% !important; padding: 20px !important; box-sizing: border-box !important; }' +
+                    '.gm-hot-search .boiling-contain_3r2Lv { width: 100% !important; max-width: 100% !important; margin: 0 !important; min-width: 0 !important; }' +
+
+                    // 4. 尺寸适配 (单双列)
+                    'body.double-column .gm-hot-search, body.double-column.pc-fresh-wrapper-con .c-pc-toppic-card { width: calc(50% - 10px) !important; max-width: calc(50% - 10px) !important; min-width: 0 !important; flex: 0 0 calc(50% - 10px) !important; margin: 0 0 20px 0 !important; }' +
+                    'body.double-column .c-container.gm-hot-search { max-height: none !important; height: auto !important; }' +
+                    'body.single-column .gm-hot-search, body.single-column.pc-fresh-wrapper-con .c-pc-toppic-card { width: 100% !important; max-width: 800px !important; min-width: 0 !important; margin: 0 auto 25px auto !important; }' +
+
+                    // 5. 核心：全模式开启横向滚动条，取代Grid，彻底解决挤压和截断
+                    '.gm-hot-search .boiling-hot-list_3MLaq { width: 100% !important; position: relative !important; overflow-x: auto !important; overflow-y: hidden !important; scrollbar-width: thin; padding-bottom: 12px !important; }' +
+                    '.gm-hot-search .no-swiper-area_52LRg, .gm-hot-search .swiper-wrapper { display: flex !important; flex-wrap: nowrap !important; width: max-content !important; gap: 15px !important; transform: none !important; transition: none !important; }' +
+
+                    // 6. 统一卡片尺寸
+                    '.gm-hot-search .card_1FDsA { width: 220px !important; flex: 0 0 220px !important; height: auto !important; margin: 0 !important; padding: 12px !important; box-sizing: border-box !important; border-radius: 8px !important; box-shadow: none !important; background-color: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.2) !important; }' +
+
+                    // 7. 防止文字撑破 & 隐藏多余元素
+                    '.gm-hot-search .hot-item_1473U { display: flex !important; width: 100% !important; margin-bottom: 8px !important; align-items: center !important; }' +
+                    '.gm-hot-search .item-mid_vrw25 { flex: 1 !important; min-width: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }' +
+                    '.gm-hot-search .hot-score_2DajL { display: none !important; }' +
+                    '.gm-hot-search .mid-img_3-88C { display: flex !important; width: 100% !important; margin-bottom: 15px !important; }' +
+                    // 缩小巨大的百度热搜Logo
+                    '.gm-hot-search .boiling-title_ZrdUH img { max-width: 180px !important; height: auto !important; object-fit: contain !important; }' +
+                    '.gm-hot-search .row-right_1eYkS, .gm-hot-search .boiling-right_3Etl4 { display: none !important; }' +
+
+                    // 8. 滚动条美化
+                    '.boiling-hot-list_3MLaq::-webkit-scrollbar { height: 8px !important; }' +
+                    '.boiling-hot-list_3MLaq::-webkit-scrollbar-track { background: transparent !important; }' +
+                    '.boiling-hot-list_3MLaq::-webkit-scrollbar-thumb { background: #d0d0d0 !important; border-radius: 4px !important; }' +
+
+                    // 锁定顶部标题区域的高度与溢出隐藏
+                    '.gm-hot-search .boiling-contain_3r2Lv .row-left_1OGNu, .boiling-all_29kBD .row-left_1OGNu { padding-top: 2px !important; overflow: hidden !important; flex: 1 !important; min-width: 0 !important; }' +
+                    '.gm-hot-search .boiling-contain_3r2Lv .mid-img_3-88C, .boiling-all_29kBD .mid-img_3-88C { position: relative !important; height: 50px !important; display: flex !important; width: 100% !important; margin-bottom: 15px !important; }' +
+
+                    // 9. 深色模式专属上色
+                    'body:not(.dark-mode) .gm-hot-search .title-text_16Vh- { color: #fff !important; }' +
+                    'body:not(.dark-mode) .gm-hot-search .item-mid_vrw25 { color: #fff !important; }' +
+                    'body.dark-mode .gm-hot-search .bg-wrapper_2Yb28 { display: none !important; }' +
+                    'body.dark-mode .gm-hot-search { background-color: #252525 !important; border: 1px solid #333 !important; }' +
+                    'body.dark-mode .gm-hot-search .card_1FDsA { background-color: #333 !important; border: 1px solid #444 !important; }' +
+                    'body.dark-mode .gm-hot-search .boiling-title_ZrdUH img { filter: brightness(0) invert(1) opacity(0.8) !important; }' +
+                    'body.dark-mode .gm-hot-search .title-text_16Vh-, body.dark-mode .gm-hot-search .item-mid_vrw25 { color: #e8e6e3 !important; text-shadow: none !important; }' +
+                    'body.dark-mode .gm-hot-search .hot-item_1473U:hover .item-mid_vrw25 { color: #8ab4f8 !important; text-decoration: underline !important; }' +
+                    'body.dark-mode .gm-hot-search .item-left_21sbZ:not([class*="num-color"]) { color: #888 !important; }' +
+                    'body.dark-mode .gm-hot-search .more-text_3Oa53 span, body.dark-mode .gm-hot-search .more-text_3Oa53 i { color: #777 !important; }' +
+                    'body.dark-mode .boiling-hot-list_3MLaq::-webkit-scrollbar-thumb { background: #555 !important; }' +
+                    'body.dark-mode .boiling-hot-list_3MLaq::-webkit-scrollbar-thumb:hover { background: #777 !important; }';
 
                 GM_addStyle(commonStyles + resultsPageStyles);
 
@@ -1721,6 +1800,32 @@
         }, 500); // 增加延时以等待DOM渲染
     }
 
+    // ⚡ 强力重构百度热搜榜 DOM 结构
+    function fixBaiduHotSearch() {
+        const wrappers = document.querySelectorAll('.boiling-wrapper_fhywn');
+        wrappers.forEach(wrapper => {
+            // 找到最外层容器，可能是自己或者是父级
+            let topCard = wrapper.closest('.c-pc-toppic-card') || wrapper.closest('.boiling-all_29kBD');
+            if (!topCard) topCard = wrapper;
+
+            // 强制添加 .c-container 和专属烙印
+            if (!topCard.classList.contains('gm-hot-search')) {
+                topCard.classList.add('c-container', 'gm-hot-search');
+                // 注意：这里不再物理删除 `.bg-wrapper_2Yb28` 的红色渐变背景！
+                // 而是通过 CSS overflow: hidden 把它裁减到合理宽度，从而解决溢出，又保留白字的可见度。
+            }
+
+            // 持续剥夺高度限制，防止百度 JS 动态回滚截断
+            if (topCard.style.height) topCard.style.height = '';
+            if (wrapper.style.height) wrapper.style.height = '';
+        });
+
+        // 隐藏侧边滑动按钮（百度自带轮播的左右箭头）
+        document.querySelectorAll('.boiling-wrapper_fhywn .left-btn_3tTYg, .boiling-wrapper_fhywn .right-btn_sh5Wo').forEach(btn => {
+            if (btn.style.display !== 'none') btn.style.display = 'none';
+        });
+    }
+
     // 初始化暴力样式修正器
     function initForceStyleFixer() {
         setInterval(() => {
@@ -1728,6 +1833,9 @@
                 // 暴力移除广告
                 const ads = document.querySelectorAll('#s_popup_advert, .popup-advert, .advert-shrink, .advert-shrink2');
                 ads.forEach(node => node.remove());
+
+                // ⚡ 实时镇压并重构热搜榜
+                fixBaiduHotSearch();
             } catch (e) {}
         }, 500);
     }
