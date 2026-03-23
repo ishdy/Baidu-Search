@@ -19,7 +19,8 @@
 // @connect      m.baidu.com
 // @connect      xueshu.baidu.com
 // @license      MIT
-// @downloadURL  none
+// @downloadURL https://update.greasyfork.org/scripts/543000/%E7%99%BE%E5%BA%A6%E5%85%A8%E9%A1%B5%E9%9D%A2%E6%A0%B7%E5%BC%8F%E4%BC%98%E5%8C%96-%E5%8E%BB%E5%B9%BF%E5%91%8A%EF%BC%8C%E6%B7%B1%E8%89%B2%E6%A8%A1%E5%BC%8F.user.js
+// @updateURL https://update.greasyfork.org/scripts/543000/%E7%99%BE%E5%BA%A6%E5%85%A8%E9%A1%B5%E9%9D%A2%E6%A0%B7%E5%BC%8F%E4%BC%98%E5%8C%96-%E5%8E%BB%E5%B9%BF%E5%91%8A%EF%BC%8C%E6%B7%B1%E8%89%B2%E6%A8%A1%E5%BC%8F.meta.js
 // ==/UserScript==
 
 (function() {
