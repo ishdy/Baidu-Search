@@ -55,7 +55,10 @@
 # Baidu-search 更新日志
 
 <br>
-v1.65<br>
+v1.67<br>
+1.优化细节<br>
+<br>
+v1.66<br>
 性能优化<br>
 <br>
 v1.65<br>
