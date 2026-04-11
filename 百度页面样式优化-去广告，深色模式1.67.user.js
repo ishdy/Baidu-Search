@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
-// @version      1.64
+// @version      1.67
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc (Enhanced)
@@ -428,6 +428,8 @@
 
                         if (!contentLeft) throw new Error('未找到 #content_left');
                         let addedCount = 0;
+
+                        // 优化点：将选择器提到循环外部，减少不必要的重复DOM查询性能消耗
                         let currentPageElement = document.querySelector('#page');
 
                         results.forEach(result => {
@@ -444,7 +446,8 @@
 
                             const clonedResult = result.cloneNode(true);
                             clonedResult.removeAttribute('ac_redirectStatus');
-                            currentPageElement = document.querySelector('#page');
+
+                            // 移除内部循环查询，利用外部缓存的 currentPageElement
 
                             if (currentPageElement && currentPageElement.parentNode === contentLeft) {
                                 contentLeft.insertBefore(clonedResult, currentPageElement);
@@ -568,11 +571,6 @@
         '.gm-host-separator { color: #999; }' +
         'body.dark-mode .gm-host-name { color: #aaa; }' +
         'body.dark-mode .gm-host-separator { color: #777; }' +
-
-        // ==============================================
-        // 如果你希望彻底看不见这个提示，可以使用下面这一行代替上面的所有代码：
-        // ==============================================
-        // 'body.double-column .k8vt8hp { display: none !important; }' +
 
         // 单列布局样式
         'body.single-column #container.sam_newgrid, body.single-column #content_left, body.single-column .wrapper_new #content_left, body.single-column #container.sam_newgrid #content_left { width: 100% !important; max-width: 1200px !important; margin: 0 auto !important; padding: 0 !important; display: flex !important; flex-direction: column !important; align-items: center !important; }' +
@@ -943,23 +941,143 @@
         '    border: none !important; ' +
         '}' +
 
+        // ==========================================
+        // ⚡ 修复游戏详情卡片字体颜色
+        // ==========================================
+        // 发售简介、排行榜名称、按钮、视频标题等通用文本
+        'body.dark-mode div[class*="gameinfo"] [class*="common-font"], body.dark-mode div[class*="gameinfo"] [class*="common-font"] span, ' +
+        'body.dark-mode [class*="platform-intro_"], body.dark-mode [class*="item-name_"], body.dark-mode [class*="item-sort_"], ' +
+        'body.dark-mode [class*="btn-text_"], body.dark-mode [class*="container-text_"] ' +
+        '{ color: #e8e6e3 !important; text-shadow: 0 0 2px rgba(0,0,0,0.5) !important; }' +
+
+        // 游戏背景/角色设定等标签、底部“查看全部”链接
+        'body.dark-mode [class*="platform-tags_"] a, body.dark-mode [class*="viewlink_"] ' +
+        '{ color: #8ab4f8 !important; text-shadow: none !important; background: transparent !important; }' +
+
+        // 视频来源/作者名称置灰
+        'body.dark-mode [class*="container-source_"] ' +
+        '{ color: #999 !important; text-shadow: none !important; }' +
+
+        // 中间（视频、攻略、角色）选项卡
+        'body.dark-mode .c-tabs-nav-li { color: #ccc !important; }' +
+        'body.dark-mode .c-tabs-nav-li[class*="selected"] { color: #fff !important; border-bottom-color: #4e6ef2 !important; }' +
+
         // ==========================================================================
         // 修复置顶结果被遮挡的问题
         // ==========================================================================
         // 给第一条结果（置顶的官方结果）增加底部 padding，腾出空间放蓝色标签，防止遮挡文字
         '#content_left > .c-container:first-child, #content_left > .result:first-child, #content_left > .result-op:first-child { position: relative !important; padding-bottom: 35px !important; }' +
 
+        // 屏蔽双列下的提示文字
+        'body.double-column .k8vt8hp { display: none !important; }' +
+
         // ==========================================================================
         // 修复百科/知识图谱卡片重叠 & 底部按钮对齐
         // ==========================================================================
-        // 强制取消 Flex 和高度限制，解决文字挤压，让卡片自然撑开
+        // 强制取消 Flex 和高度限制，解决文字挤压，让卡片自然撑开，宽度包含 50% 与 100% 规则组合适应新旧卡片
         '.c-container[tpl="baike"], .c-container[tpl="kg_entity_card"], .c-container.pc-fresh-wrapper-con, .c-container.c-group-wrapper { display: block !important; height: auto !important; max-height: none !important; width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; overflow: visible !important; }' +
 
         // 强制底部来源栏沉底，拉开距离，并强制横向排列 (关键：display: flex 让按钮在一行)
         '.pc-fresh-wrapper-con .source_1Vdff, .c-group-wrapper .source_1Vdff { position: relative !important; clear: both !important; margin-top: 15px !important; padding-top: 10px !important; display: flex !important; align-items: center !important; flex-wrap: nowrap !important; width: 100% !important; height: auto !important; }' +
 
         // 强制清除浮动，防止文字内容溢出覆盖底部
-        '.c-container[tpl="baike"]::after, .pc-fresh-wrapper-con::after { content: " " !important; display: table !important; clear: both !important; }';
+        '.c-container[tpl="baike"]::after, .pc-fresh-wrapper-con::after { content: " " !important; display: table !important; clear: both !important; }' +
+
+        // ==========================================
+        // ⚡ 百度热搜榜终极补丁 (全模式横向平滑滚动，彻底防截断)
+        // ==========================================
+        // 1. 彻底击碎百度的 min-width 限制
+        'body.pc-fresh-wrapper-con .c-pc-toppic-card, body .c-pc-toppic-card, body .boiling-all_29kBD { min-width: 0 !important; min-width: unset !important; }' +
+
+        // 2. 根容器自适应重置
+        '.gm-hot-search { position: relative !important; height: auto !important; max-height: none !important; box-sizing: border-box !important; overflow: hidden !important; border-radius: 12px !important; padding: 0 !important; min-width: 0 !important; }' +
+        '.gm-hot-search .bg-wrapper_2Yb28 { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; z-index: 0 !important; }' +
+        '.gm-hot-search .bg-wrapper_2Yb28 img { width: 100% !important; height: 100% !important; object-fit: cover !important; }' +
+
+        // 3. 重置内部包裹层，干掉 top: 97px
+        '.gm-hot-search .boiling-wrapper_fhywn, .boiling-all_29kBD .boiling-wrapper_fhywn { position: relative !important; top: 0 !important; height: auto !important; max-height: none !important; width: 100% !important; padding: 20px !important; box-sizing: border-box !important; }' +
+        '.gm-hot-search .boiling-contain_3r2Lv { width: 100% !important; max-width: 100% !important; margin: 0 !important; min-width: 0 !important; }' +
+
+        // 4. 尺寸适配 (单双列) - 修正版：严格区分单双列的宽度分配
+        // 强制取消百度内部限制宽度的 class，防止干扰 Flex 计算
+        'body .gm-hot-search, body .c-pc-toppic-card { width: auto !important; max-width: none !important; }' +
+
+        // 单列模式：满宽且居中
+        'body.single-column #content_left > .result-op[tpl="boiling-point"], ' +
+        'body.single-column #content_left > .c-container[tpl="boiling-point"], ' +
+        'body.single-column .gm-hot-search, ' +
+        'body.single-column .c-pc-toppic-card { ' +
+        'width: 100% !important; max-width: 800px !important; margin: 0 auto 25px auto !important; ' +
+        '}' +
+
+        // 双列模式：满宽完美跨屏，解决变窄与左对齐空白问题
+        'body.double-column #content_left > .result-op[tpl="boiling-point"], ' +
+        'body.double-column #content_left > .c-container[tpl="boiling-point"], ' +
+        'body.double-column .gm-hot-search, ' +
+        'body.double-column .c-pc-toppic-card { ' +
+        '    width: 100% !important; max-width: 100% !important; ' +
+        '    flex: 0 0 100% !important; margin: 0 0 20px 0 !important; ' +
+        '    box-sizing: border-box !important; overflow: hidden !important; ' +
+        '}' +
+
+        // 确保双列下，即使热搜排在第一个，也横跨100%
+        'body.double-column #content_left > .result-op:first-child[tpl="boiling-point"], ' +
+        'body.double-column #content_left > .c-container:first-child[tpl="boiling-point"] { ' +
+        '    width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; ' +
+        '}' +
+
+        // 5. 核心：全模式开启横向滚动条，内容居中对齐均匀分布，彻底告别偏左！
+        '.gm-hot-search .boiling-hot-list_3MLaq { ' +
+        '    width: 100% !important; position: relative !important; overflow-x: auto !important; ' +
+        '    overflow-y: hidden !important; scrollbar-width: thin; padding-bottom: 12px !important; ' +
+        '    display: flex !important; justify-content: center !important; ' +
+        '}' +
+        '.gm-hot-search .no-swiper-area_52LRg, .gm-hot-search .swiper-wrapper { ' +
+        '    display: flex !important; flex-wrap: nowrap !important; width: 100% !important; ' +
+        '    max-width: 1200px !important; justify-content: space-evenly !important; gap: 15px !important; ' +
+        '    transform: none !important; transition: none !important; margin: 0 auto !important; ' +
+        '}' +
+
+        // 6. 统一卡片尺寸，启用弹性伸缩，自动填满空白
+        '.gm-hot-search .card_1FDsA { ' +
+        '    width: auto !important; min-width: 220px !important; max-width: 280px !important; flex: 1 !important; ' +
+        '    height: auto !important; margin: 0 !important; padding: 12px !important; ' +
+        '    box-sizing: border-box !important; border-radius: 8px !important; box-shadow: none !important; ' +
+        '    background-color: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.2) !important; ' +
+        '}' +
+
+        // 7. 防止文字撑破 & 隐藏多余元素
+        '.gm-hot-search .hot-item_1473U { display: flex !important; width: 100% !important; margin-bottom: 8px !important; align-items: center !important; }' +
+        '.gm-hot-search .item-mid_vrw25 { flex: 1 !important; min-width: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }' +
+        '.gm-hot-search .hot-score_2DajL { display: none !important; }' +
+        // 居中热搜标题Logo
+        '.gm-hot-search .mid-img_3-88C { display: flex !important; width: 100% !important; margin-bottom: 15px !important; justify-content: center !important; }' +
+        // 缩小巨大的百度热搜Logo
+        '.gm-hot-search .boiling-title_ZrdUH img { max-width: 180px !important; height: auto !important; object-fit: contain !important; }' +
+        '.gm-hot-search .row-right_1eYkS, .gm-hot-search .boiling-right_3Etl4 { display: none !important; }' +
+
+        // 8. 滚动条美化
+        '.boiling-hot-list_3MLaq::-webkit-scrollbar { height: 8px !important; }' +
+        '.boiling-hot-list_3MLaq::-webkit-scrollbar-track { background: transparent !important; }' +
+        '.boiling-hot-list_3MLaq::-webkit-scrollbar-thumb { background: #d0d0d0 !important; border-radius: 4px !important; }' +
+
+        // 锁定顶部标题区域的高度与溢出隐藏，并将其居中
+        '.gm-hot-search .boiling-contain_3r2Lv .row-left_1OGNu, .boiling-all_29kBD .row-left_1OGNu { padding-top: 2px !important; overflow: hidden !important; flex: 1 !important; min-width: 0 !important; }' +
+        '.gm-hot-search .boiling-contain_3r2Lv .mid-img_3-88C, .boiling-all_29kBD .mid-img_3-88C { position: relative !important; height: 50px !important; display: flex !important; width: 100% !important; margin-bottom: 15px !important; justify-content: center !important; }' +
+
+        // 9. 深色模式专属上色
+        'body:not(.dark-mode) .gm-hot-search .title-text_16Vh- { color: #fff !important; }' +
+        'body:not(.dark-mode) .gm-hot-search .item-mid_vrw25 { color: #fff !important; }' +
+        'body.dark-mode .gm-hot-search .bg-wrapper_2Yb28 { display: none !important; }' +
+        'body.dark-mode .gm-hot-search { background-color: #252525 !important; border: 1px solid #333 !important; }' +
+        'body.dark-mode .gm-hot-search .card_1FDsA { background-color: #333 !important; border: 1px solid #444 !important; }' +
+        'body.dark-mode .gm-hot-search .boiling-title_ZrdUH img { filter: brightness(0) invert(1) opacity(0.8) !important; }' +
+        'body.dark-mode .gm-hot-search .title-text_16Vh-, body.dark-mode .gm-hot-search .item-mid_vrw25 { color: #e8e6e3 !important; text-shadow: none !important; }' +
+        'body.dark-mode .gm-hot-search .hot-item_1473U:hover .item-mid_vrw25 { color: #8ab4f8 !important; text-decoration: underline !important; }' +
+        'body.dark-mode .gm-hot-search .item-left_21sbZ:not([class*="num-color"]) { color: #888 !important; }' +
+        'body.dark-mode .gm-hot-search .more-text_3Oa53 span, body.dark-mode .gm-hot-search .more-text_3Oa53 i { color: #777 !important; }' +
+        'body.dark-mode .boiling-hot-list_3MLaq::-webkit-scrollbar-thumb { background: #555 !important; }' +
+        'body.dark-mode .boiling-hot-list_3MLaq::-webkit-scrollbar-thumb:hover { background: #777 !important; }';
 
     // ==============================================
     // 核心执行函数
@@ -1303,7 +1421,6 @@
                     '.pc-fresh-smooth .c-group-wrapper::after, .pc-fresh-smooth .new-pmd .c-border::after { display: none !important; }' +
                     '.bk_polysemy_1Ef6j .left-image_3TJlK .video-poster_3md57 .video-logo_2HJcT { position: absolute !important; left: 0 !important; bottom: -100px !important; }' +
 
-
                     // ==========================================
                     // ⚡把所有播放按钮在图片正中心
                     // ==========================================
@@ -1320,8 +1437,7 @@
                     'height: auto !important; ' +            /* 让日历根据自身内容撑开高度 */
                     'overflow: visible !important; ' +       /* 防止内部的下拉菜单或阴影被切掉 */
                     'padding-bottom: 20px !important; ' +    /* 底部留出呼吸空间 */
-                    '}';
-
+                    '}' +
 
                     // 其他组件
                     'body.dark-mode .scroll-box_2RZdL .tips_33agN { color: #e8e6e3 !important; }' +
@@ -1368,7 +1484,7 @@
                     '.c-container[tpl="baike"]::after, .pc-fresh-wrapper-con::after { content: " " !important; display: table !important; clear: both !important; }' +
 
                     // ==========================================
-                    // ⚡ 百度热搜榜终极补丁 (全模式横向平滑滚动，彻底防截断)
+                    // ⚡ 百度热搜榜 (全模式横向平滑滚动，彻底防截断)
                     // ==========================================
                     // 1. 彻底击碎百度的 min-width 限制
                     'body.pc-fresh-wrapper-con .c-pc-toppic-card, body .c-pc-toppic-card, body .boiling-all_29kBD { min-width: 0 !important; min-width: unset !important; }' +
@@ -1382,23 +1498,62 @@
                     '.gm-hot-search .boiling-wrapper_fhywn, .boiling-all_29kBD .boiling-wrapper_fhywn { position: relative !important; top: 0 !important; height: auto !important; max-height: none !important; width: 100% !important; padding: 20px !important; box-sizing: border-box !important; }' +
                     '.gm-hot-search .boiling-contain_3r2Lv { width: 100% !important; max-width: 100% !important; margin: 0 !important; min-width: 0 !important; }' +
 
-                    // 4. 尺寸适配 (单双列)
-                    'body.double-column .gm-hot-search, body.double-column.pc-fresh-wrapper-con .c-pc-toppic-card { width: calc(50% - 10px) !important; max-width: calc(50% - 10px) !important; min-width: 0 !important; flex: 0 0 calc(50% - 10px) !important; margin: 0 0 20px 0 !important; }' +
-                    'body.double-column .c-container.gm-hot-search { max-height: none !important; height: auto !important; }' +
-                    'body.single-column .gm-hot-search, body.single-column.pc-fresh-wrapper-con .c-pc-toppic-card { width: 100% !important; max-width: 800px !important; min-width: 0 !important; margin: 0 auto 25px auto !important; }' +
+                    // 4. 尺寸适配 (单双列) - 修正版：严格区分单双列的宽度分配
+                    // 强制取消百度内部限制宽度的 class，防止干扰 Flex 计算
+                    'body .gm-hot-search, body .c-pc-toppic-card { width: auto !important; max-width: none !important; }' +
 
-                    // 5. 核心：全模式开启横向滚动条，取代Grid，彻底解决挤压和截断
-                    '.gm-hot-search .boiling-hot-list_3MLaq { width: 100% !important; position: relative !important; overflow-x: auto !important; overflow-y: hidden !important; scrollbar-width: thin; padding-bottom: 12px !important; }' +
-                    '.gm-hot-search .no-swiper-area_52LRg, .gm-hot-search .swiper-wrapper { display: flex !important; flex-wrap: nowrap !important; width: max-content !important; gap: 15px !important; transform: none !important; transition: none !important; }' +
+                    // 单列模式：满宽且居中
+                    'body.single-column #content_left > .result-op[tpl="boiling-point"], ' +
+                    'body.single-column #content_left > .c-container[tpl="boiling-point"], ' +
+                    'body.single-column .gm-hot-search, ' +
+                    'body.single-column .c-pc-toppic-card { ' +
+                    '    width: 100% !important; max-width: 800px !important; margin: 0 auto 25px auto !important; ' +
+                    '}' +
 
-                    // 6. 统一卡片尺寸
-                    '.gm-hot-search .card_1FDsA { width: 220px !important; flex: 0 0 220px !important; height: auto !important; margin: 0 !important; padding: 12px !important; box-sizing: border-box !important; border-radius: 8px !important; box-shadow: none !important; background-color: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.2) !important; }' +
+                    // 双列模式：满宽完美跨屏，解决变窄与左对齐空白问题
+                    'body.double-column #content_left > .result-op[tpl="boiling-point"], ' +
+                    'body.double-column #content_left > .c-container[tpl="boiling-point"], ' +
+                    'body.double-column .gm-hot-search, ' +
+                    'body.double-column .c-pc-toppic-card { ' +
+                    '    width: 100% !important; max-width: 100% !important; ' +
+                    '    flex: 0 0 100% !important; margin: 0 0 20px 0 !important; ' +
+                    '    box-sizing: border-box !important; overflow: hidden !important; ' +
+                    '}' +
 
+                    // 确保双列下，即使热搜排在第一个，也横跨100%
+                    'body.double-column #content_left > .result-op:first-child[tpl="boiling-point"], ' +
+                    'body.double-column #content_left > .c-container:first-child[tpl="boiling-point"] { ' +
+                    '    width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; ' +
+                    '}' +
+
+                    // 5. 核心：全模式开启横向滚动条，内容居中对齐均匀分布，彻底告别偏左！
+                    '.gm-hot-search .boiling-hot-list_3MLaq { ' +
+                    '    width: 100% !important; position: relative !important; overflow-x: auto !important; ' +
+                    '    overflow-y: hidden !important; scrollbar-width: thin; padding-bottom: 12px !important; ' +
+                    '    display: block !important; ' + // 必须是 block 才能触发内部 width 100% 溢出
+                    '}' +
+                    '.gm-hot-search .no-swiper-area_52LRg, .gm-hot-search .swiper-wrapper { ' +
+                    '    display: flex !important; flex-wrap: nowrap !important; width: 100% !important; ' +
+                    '    min-width: max-content !important; justify-content: flex-start !important; gap: 15px !important; ' +
+                    '    transform: none !important; transition: none !important; margin: 0 !important; ' +
+                    '}' +
+
+                    // 6. 统一卡片尺寸，弹性伸缩
+                    '.gm-hot-search .card_1FDsA { ' +
+                    '    flex: 1 !important; min-width: 240px !important; max-width: 350px !important; ' +
+                    '    height: auto !important; margin: 0 !important; padding: 12px !important; ' +
+                    '    box-sizing: border-box !important; border-radius: 8px !important; box-shadow: none !important; ' +
+                    '    background-color: rgba(255,255,255,0.1) !important; border: 1px solid rgba(255,255,255,0.2) !important; ' +
+                    '}' +
+                    '#con-at, .pc-fresh-wrapper-con #con-at { padding-left: 0 !important; width: 100% !important; display: flex !important; justify-content: center !important; margin: 0 auto !important; }' +
+                    '#con-at > div { width: 50% !important; max-width: 50% !important; }' +
                     // 7. 防止文字撑破 & 隐藏多余元素
                     '.gm-hot-search .hot-item_1473U { display: flex !important; width: 100% !important; margin-bottom: 8px !important; align-items: center !important; }' +
                     '.gm-hot-search .item-mid_vrw25 { flex: 1 !important; min-width: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }' +
                     '.gm-hot-search .hot-score_2DajL { display: none !important; }' +
-                    '.gm-hot-search .mid-img_3-88C { display: flex !important; width: 100% !important; margin-bottom: 15px !important; }' +
+
+                    // 居中热搜标题Logo
+                    '.gm-hot-search .mid-img_3-88C { display: flex !important; width: 100% !important; margin-bottom: 15px !important; justify-content: center !important; }' +
                     // 缩小巨大的百度热搜Logo
                     '.gm-hot-search .boiling-title_ZrdUH img { max-width: 180px !important; height: auto !important; object-fit: contain !important; }' +
                     '.gm-hot-search .row-right_1eYkS, .gm-hot-search .boiling-right_3Etl4 { display: none !important; }' +
@@ -1408,9 +1563,9 @@
                     '.boiling-hot-list_3MLaq::-webkit-scrollbar-track { background: transparent !important; }' +
                     '.boiling-hot-list_3MLaq::-webkit-scrollbar-thumb { background: #d0d0d0 !important; border-radius: 4px !important; }' +
 
-                    // 锁定顶部标题区域的高度与溢出隐藏
+                    // 锁定顶部标题区域的高度与溢出隐藏，并将其居中
                     '.gm-hot-search .boiling-contain_3r2Lv .row-left_1OGNu, .boiling-all_29kBD .row-left_1OGNu { padding-top: 2px !important; overflow: hidden !important; flex: 1 !important; min-width: 0 !important; }' +
-                    '.gm-hot-search .boiling-contain_3r2Lv .mid-img_3-88C, .boiling-all_29kBD .mid-img_3-88C { position: relative !important; height: 50px !important; display: flex !important; width: 100% !important; margin-bottom: 15px !important; }' +
+                    '.gm-hot-search .boiling-contain_3r2Lv .mid-img_3-88C, .boiling-all_29kBD .mid-img_3-88C { position: relative !important; height: 50px !important; display: flex !important; width: 100% !important; margin-bottom: 15px !important; justify-content: center !important; }' +
 
                     // 9. 深色模式专属上色
                     'body:not(.dark-mode) .gm-hot-search .title-text_16Vh- { color: #fff !important; }' +
@@ -1633,7 +1788,8 @@
         document.body.appendChild(backToTopButton);
         document.body.appendChild(settingsPanel);
 
-        // 返回顶部按钮功能
+        // 优化1：防抖/节流滚动事件（requestAnimationFrame机制）
+        let isScrolling = false;
         const toggleBackToTop = () => {
             if (window.pageYOffset > 300) {
                 backToTopButton.classList.add('show');
@@ -1642,7 +1798,16 @@
             }
         };
 
-        window.addEventListener('scroll', toggleBackToTop);
+        window.addEventListener('scroll', () => {
+            if (!isScrolling) {
+                window.requestAnimationFrame(() => {
+                    toggleBackToTop();
+                    isScrolling = false;
+                });
+                isScrolling = true;
+            }
+        });
+
         toggleBackToTop();
 
         backToTopButton.addEventListener('click', () => {
@@ -1811,12 +1976,11 @@
             // 强制添加 .c-container 和专属烙印
             if (!topCard.classList.contains('gm-hot-search')) {
                 topCard.classList.add('c-container', 'gm-hot-search');
-                // 注意：这里不再物理删除 `.bg-wrapper_2Yb28` 的红色渐变背景！
-                // 而是通过 CSS overflow: hidden 把它裁减到合理宽度，从而解决溢出，又保留白字的可见度。
             }
 
-            // 持续剥夺高度限制，防止百度 JS 动态回滚截断
+            // 持续剥夺高度和宽度限制，防止百度 JS 动态回滚截断
             if (topCard.style.height) topCard.style.height = '';
+            if (topCard.style.width) topCard.style.width = ''; // 核心修复：彻底斩断内联强行定宽！
             if (wrapper.style.height) wrapper.style.height = '';
         });
 
@@ -1826,9 +1990,12 @@
         });
     }
 
-    // 初始化暴力样式修正器
+    // 优化2：初始化暴力样式修正器（渐进式轮询以降低CPU功耗）
     function initForceStyleFixer() {
-        setInterval(() => {
+        let interval = 500;
+        let executionCount = 0;
+
+        const runFixer = () => {
             try {
                 // 暴力移除广告
                 const ads = document.querySelectorAll('#s_popup_advert, .popup-advert, .advert-shrink, .advert-shrink2');
@@ -1837,7 +2004,17 @@
                 // ⚡ 实时镇压并重构热搜榜
                 fixBaiduHotSearch();
             } catch (e) {}
-        }, 500);
+
+            executionCount++;
+            // 页面加载前期高频检测（5秒），之后降低频率以降低性能损耗
+            if (executionCount === 10) {
+                clearInterval(fixerTimer);
+                interval = 2500; // 降低至2.5秒一次
+                fixerTimer = setInterval(runFixer, interval);
+            }
+        };
+
+        let fixerTimer = setInterval(runFixer, interval);
     }
 
     // 启动样式修正
