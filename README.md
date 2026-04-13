@@ -55,6 +55,9 @@
 # Baidu-search 更新日志
 
 <br>
+v1.68<br>
+1.优化细节<br>
+<br>
 v1.67<br>
 1.优化细节<br>
 <br>
