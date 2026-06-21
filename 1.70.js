@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         百度全页面样式优化-去广告，深色模式（优化版）
+// @name         百度全页面样式优化-去广告，深色模式
 // @namespace    http://tampermonkey.net/
 // @version      1.7.0
 // @icon         https://www.baidu.com/favicon.ico
