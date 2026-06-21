@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         百度全页面样式优化-去广告，深色模式
+// @name         百度全页面样式优化-去广告，深色模式（优化版）
 // @namespace    http://tampermonkey.net/
-// @version      1.69
+// @version      1.7.0
 // @icon         https://www.baidu.com/favicon.ico
 // @description  添加单双列布局切换，官网置顶功能，优化百度官方标识识别，增加深色模式切换，移除百度搜索结果跳转页面，并加宽搜索结果。
 // @author       Ai-Rcccccccc
@@ -33,6 +33,7 @@
         forceFixerTimer: null,       // 强制修复定时器
         clickLoadingObserver: null,  // loading Observer
         overlayTimers: [],           // 遮罩延迟定时器
+        settingsMenuInitialized: false, // 设置菜单全局监听是否已绑定
     };
 
     const isMobile = () => location.host === 'm.baidu.com';
@@ -85,7 +86,15 @@
         '.search-quit-dialog-wrap',
         '._2lMH_',
         '[class*="search-quit"]',
-        '[class*="dialog-wrap"]'
+        '[class*="dialog-wrap"]',
+        // 百度 loading / 遮罩类
+        '.loading-wrap',
+        '.loading-mask',
+        '.page-loading',
+        '[class*="loading-mask"]',
+        '[class*="page-loading"]',
+        '#loading',
+        '#page-loading'
     ].join(', ');
 
     // GM 自身 UI 白名单
@@ -108,7 +117,6 @@
     /** 判断单个元素是否全屏遮罩 */
     function isFullScreenOverlay(el) {
         if (isGmUi(el)) return false;
-        // 快速尺寸判断，避免无谓 getComputedStyle
         const rect = el.getBoundingClientRect();
         if (rect.width < window.innerWidth * 0.75) return false;
         if (rect.height < window.innerHeight * 0.75) return false;
@@ -129,9 +137,9 @@
     function blockOverlays(root = document) {
         // 已知类名优先
         root.querySelectorAll(OVERLAY_SELECTOR).forEach(hideElement);
-        // 再扫 fixed/absolute 候选
+        // 扫 fixed/absolute 候选（inline style + CSS class 都覆盖）
         const candidates = root.querySelectorAll(
-            '[style*="position:fixed"],[style*="position:fixed"],[style*="z-index"]'
+            '[style*="position:fixed"],[style*="position:absolute"],[style*="z-index"]'
         );
         candidates.forEach((el) => {
             if (isFullScreenOverlay(el)) hideElement(el);
@@ -1371,10 +1379,10 @@
         'body.dark-mode .cos-select-option-selected { background-color: #4e6ef2 !important; color: #fff !important; }';
 
 
-    /** 一次性注入样式 */
+    /** 注入样式（防重复 + 元素被删则重建） */
     function injectStyles(cssText) {
-        if (STATE.styleInjected) return;
         let el = document.getElementById(STYLE_ELEMENT_ID);
+        if (el && STATE.styleInjected) return;       // 已注入且元素存在
         if (!el) {
             el = document.createElement('style');
             el.id = STYLE_ELEMENT_ID;
@@ -1399,6 +1407,10 @@
     }
 
     function setupSettingsMenu() {
+        // 全局监听只绑定一次
+        const firstInit = !STATE.settingsMenuInitialized;
+        if (firstInit) STATE.settingsMenuInitialized = true;
+        // 按钮已存在则跳过创建（但全局监听已绑定）
         if (document.getElementById('settings-toggle')) return;
 
         const backToTopButton = document.createElement('div');
@@ -1434,41 +1446,50 @@
         document.body.appendChild(backToTopButton);
         document.body.appendChild(settingsPanel);
 
-        // 返回顶部（rAF + passive）
-        let isScrolling = false;
-        const toggleBackToTop = () => {
-            if (window.pageYOffset > 300) backToTopButton.classList.add('show');
-            else backToTopButton.classList.remove('show');
-        };
-        window.addEventListener(
-            'scroll',
-            () => {
-                if (!isScrolling) {
-                    window.requestAnimationFrame(() => {
-                        toggleBackToTop();
-                        isScrolling = false;
-                    });
-                    isScrolling = true;
-                }
-            },
-            { passive: true }
-        );
-        toggleBackToTop();
-        backToTopButton.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        // 全局监听只绑定一次（用委托方式，实时查找按钮，避免按钮重建后监听失效）
+        if (firstInit) {
+            let isScrolling = false;
+            window.addEventListener(
+                'scroll',
+                () => {
+                    if (!isScrolling) {
+                        window.requestAnimationFrame(() => {
+                            const btn = document.getElementById('back-to-top');
+                            if (btn) btn.classList.toggle('show', window.pageYOffset > 300);
+                            isScrolling = false;
+                        });
+                        isScrolling = true;
+                    }
+                },
+                { passive: true }
+            );
+            // 初始触发一次
+            const initBtn = document.getElementById('back-to-top');
+            if (initBtn) initBtn.classList.toggle('show', window.pageYOffset > 300);
 
-        // 设置面板开关
-        let isPanelOpen = false;
-        settingsButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            isPanelOpen = !isPanelOpen;
-            settingsPanel.classList.toggle('show', isPanelOpen);
-        });
-        document.addEventListener('click', (e) => {
-            if (!settingsPanel.contains(e.target) && e.target !== settingsButton) {
-                isPanelOpen = false;
-                settingsPanel.classList.remove('show');
-            }
-        });
+            // 点击返回顶部
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#back-to-top')) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+
+            // 设置面板开关 + 外部点击关闭
+            document.addEventListener('click', (e) => {
+                const toggle = document.getElementById('settings-toggle');
+                const panel = document.getElementById('settings-panel');
+                if (!toggle || !panel) return;
+                if (e.target === toggle || toggle.contains(e.target)) {
+                    e.stopPropagation();
+                    panel.classList.toggle('show');
+                } else if (!panel.contains(e.target)) {
+                    panel.classList.remove('show');
+                }
+            });
+        }
+
+        // 返回顶部初始状态
+        backToTopButton.classList.toggle('show', window.pageYOffset > 300);
 
         // 深色模式
         const darkModeItem = document.getElementById('dark-mode-item');
@@ -1715,17 +1736,24 @@
 
             if (isSignificantChange) {
                 STATE.mainObserver.disconnect();
-                const wrapper = document.getElementById('wrapper');
-                if (wrapper) wrapper.style.visibility = 'hidden';
-
-                setTimeout(() => {
-                    // 只重跑处理函数，不重新 GM_addStyle
+                // 同步执行，减少白屏时间
+                try {
+                    if (isHomepage()) {
+                        injectStyles(commonStyles + homepageStyles);
+                    } else if (isResultsPage()) {
+                        injectStyles(commonStyles + resultsPageStyles);
+                    }
                     processRedirects();
                     rankOfficialSite();
                     fixBaiduHotSearch();
-                    if (wrapper) wrapper.style.visibility = 'visible';
-                    if (document.body) STATE.mainObserver.observe(document.body, observerConfig);
-                }, 0);
+                    // 重新创建控制按钮（百度翻页可能删掉它们）
+                    setupSettingsMenu();
+                } catch (e) { /* swallow */ }
+                // 拦截遮罩
+                blockOverlays();
+                setTimeout(blockOverlays, 100);
+                setTimeout(blockOverlays, 500);
+                if (document.body) STATE.mainObserver.observe(document.body, observerConfig);
             }
         });
 
