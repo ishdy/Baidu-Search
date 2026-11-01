@@ -54,6 +54,26 @@
 
 **** 
 # Baidu-search 更新日志
+<br>
+v1.71<br>
+1. 修 Bug<br>
+删重复的 `==/UserScript==` 闭合标记、删重复的深色模式分页规则<br>
+删死字段 `STATE.redirectObserver`（全文件只在定义处出现）<br>
+补 `@noframes`，避免同源 iframe 里重复注入；版本号 → 1.71<br>
+<br>
+2. 收敛监听（性能）<br>
+3 个重叠的 MutationObserver 合并成 1 个，用「标记 + rAF 合批」分派<br>
+遮罩/广告检测改为只扫新增子树，不再全文档扫描；补一个微型监听抓 `style/class` 切换造成的漏检<br>
+setInterval 4 → 2，兜底轮询 60s → 30s，后台标签页跳过<br>
+<br>
+3. CSS 去重与改写<br>
+删掉重复的「百度热搜榜」样式块 74 行（另一块是超集，渲染不变）<br>
+`.c-img-s` 三份重复规则合并成一条<br>
+782 行 CSS 从字符串拼接改为模板字符串<br>
+<br>
+4. 易维护 + 加调试开关<br>
+个设置开关抽成 `createToggle` 工厂；搜索框监听加防重绑；样式注入按首页/结果页分别标记<br>
+新增 `GM_setValue('debug', true)`，把 5 处静默吞掉的报错改成可查日志<br>
 
 <br>
 v1.70<br>
